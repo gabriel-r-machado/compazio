@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node", "electron-vite/node"]
+  },
+  // The real-agent runner reaches into the wider V2 tree, which is still untypechecked; it stays
+  // out of this project until that debt is paid.
+  "exclude": ["src/v2/main/e2e/portal-real-agents.ts"],
+  "include": [
+    "src/v2/main/portal-*.ts",
+    "src/v2/main/native-surface-coordinator*.ts",
+    "src/v2/main/e2e/portal-*.ts"
+  ]
+}

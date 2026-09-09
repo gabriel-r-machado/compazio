@@ -1,0 +1,153 @@
+name: Compazio beta distribution
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Windows beta version to package
+        required: true
+        default: 0.2.0-beta.1
+      source_run_id:
+        description: Existing completed run ID to finalize without rebuilding
+        required: false
+        default: ""
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: compazio-beta-distribution-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  package-windows:
+    name: Build, validate and package Windows x64
+    if: ${{ inputs.source_run_id == '' }}
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.9.0
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.20.0
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate requested version
+        shell: pwsh
+        run: |
+          $actual = node -p "require('./package.json').version"
+          if ($actual -ne '${{ inputs.version }}') {
+            throw "Requested version ${{ inputs.version }} does not match package.json $actual"
+          }
+
+      - name: Build and validate Windows beta
+        env:
+          CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
+          CSC_IDENTITY_AUTO_DISCOVERY: ${{ secrets.WINDOWS_CSC_LINK != '' && 'true' || 'false' }}
+        run: pnpm release:windows:beta
+
+      - name: Upload temporary release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: compazio-beta-windows-x64-${{ inputs.version }}
+          path: release/${{ inputs.version }}
+          if-no-files-found: error
+          retention-days: 3
+
+  draft-release:
+    name: Create GitHub draft pre-release
+    needs: package-windows
+    if: ${{ inputs.source_run_id == '' }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download validated assets
+        uses: actions/download-artifact@v4
+        with:
+          name: compazio-beta-windows-x64-${{ inputs.version }}
+          path: artifacts
+
+      - name: Create or update draft
+        env:
+          GH_TOKEN: ${{ secrets.COMPAZIO_RELEASES_TOKEN }}
+          RELEASE_REPOSITORY: gabriel-r-machado/compazio-releases
+          RELEASE_TAG: v${{ inputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::COMPAZIO_RELEASES_TOKEN is not configured."
+            exit 1
+          fi
+          if ! gh release view "$RELEASE_TAG" --repo "$RELEASE_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --repo "$RELEASE_REPOSITORY" --draft --prerelease \
+              --title "Compazio ${{ inputs.version }} — Public Beta 1" --notes-file artifacts/RELEASE_NOTES.md
+          fi
+          mapfile -d '' assets < <(
+            find artifacts -maxdepth 1 -type f \( \
+              -iname 'Compazio-Setup-*.exe' -o \
+              -iname 'Compazio-Setup-*.exe.blockmap' -o \
+              -iname 'beta.yml' -o \
+              -iname 'release-manifest.json' -o \
+              -iname 'checksums.txt' -o \
+              -iname 'RELEASE_NOTES.md' \
+            \) -print0
+          )
+          test "${#assets[@]}" -eq 6
+          gh release upload "$RELEASE_TAG" --repo "$RELEASE_REPOSITORY" --clobber "${assets[@]}"
+
+  finalize-existing-release:
+    name: Recreate draft from an existing validated run
+    if: ${{ inputs.source_run_id != '' }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download validated assets
+        uses: actions/download-artifact@v4
+        with:
+          name: compazio-beta-windows-x64-${{ inputs.version }}
+          path: artifacts
+          repository: gabriel-r-machado/compazio-desktop
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Create or update draft
+        env:
+          GH_TOKEN: ${{ secrets.COMPAZIO_RELEASES_TOKEN }}
+          RELEASE_REPOSITORY: gabriel-r-machado/compazio-releases
+          RELEASE_TAG: v${{ inputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::COMPAZIO_RELEASES_TOKEN is not configured."
+            exit 1
+          fi
+          if ! gh release view "$RELEASE_TAG" --repo "$RELEASE_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --repo "$RELEASE_REPOSITORY" --draft --prerelease \
+              --title "Compazio ${{ inputs.version }} — Public Beta 1" --notes-file artifacts/RELEASE_NOTES.md
+          fi
+          mapfile -d '' assets < <(
+            find artifacts -maxdepth 1 -type f \( \
+              -iname 'Compazio-Setup-*.exe' -o \
+              -iname 'Compazio-Setup-*.exe.blockmap' -o \
+              -iname 'beta.yml' -o \
+              -iname 'release-manifest.json' -o \
+              -iname 'checksums.txt' -o \
+              -iname 'RELEASE_NOTES.md' \
+            \) -print0
+          )
+          test "${#assets[@]}" -eq 6
+          gh release upload "$RELEASE_TAG" --repo "$RELEASE_REPOSITORY" --clobber "${assets[@]}"

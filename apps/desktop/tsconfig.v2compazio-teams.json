@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node", "electron-vite/node"],
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": [
+    "src/v2/main/team-coordinator.ts",
+    "src/v2/main/compazio-mcp-gateway.ts",
+    "src/v2/main/e2e/compazio-real-agents.ts",
+    "src/v2/main/workspace-service.ts",
+    "src/v2/main/orchestrator-bridge.ts",
+    "src/v2/main/v2-ipc.ts"
+  ]
+}

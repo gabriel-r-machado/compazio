@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "1.0",
+  "id": "community.example-adapter",
+  "name": "Example Adapter",
+  "version": "0.1.0",
+  "publisher": "community",
+  "entry": "dist/index.js",
+  "engines": {
+    "forgedeck": ">=0.3.0"
+  },
+  "capabilities": [
+    "agent-adapter"
+  ],
+  "permissions": {
+    "executables": [
+      "example-agent"
+    ],
+    "filesystem": [
+      "workspace"
+    ],
+    "network": []
+  }
+}

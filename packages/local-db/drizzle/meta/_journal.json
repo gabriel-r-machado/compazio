@@ -1,0 +1,342 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1784160000000,
+      "tag": "0000_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1784158324262,
+      "tag": "0001_runtime_sessions",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1784160088643,
+      "tag": "0002_canvas_workflows",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1784163273089,
+      "tag": "0003_noisy_master_chief",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1784165290993,
+      "tag": "0004_futuristic_blue_blade",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1784168504609,
+      "tag": "0005_dashing_retro_girl",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1784336518462,
+      "tag": "0006_green_sandman",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1784504328685,
+      "tag": "0007_handy_khan",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1784511244210,
+      "tag": "0008_productive_dragon_lord",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1784562378099,
+      "tag": "0009_first_purifiers",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1784564593868,
+      "tag": "0010_clever_newton_destine",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1784566441212,
+      "tag": "0011_quiet_pyro",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1784583897466,
+      "tag": "0012_fearless_scarlet_spider",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1784584843172,
+      "tag": "0013_married_captain_flint",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1784586576319,
+      "tag": "0014_milky_sunset_bain",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "6",
+      "when": 1784587289304,
+      "tag": "0015_tough_la_nuit",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "6",
+      "when": 1784588881224,
+      "tag": "0016_silky_ronan",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1784591969509,
+      "tag": "0017_magical_newton_destine",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1784595406030,
+      "tag": "0018_modern_living_lightning",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1784597312483,
+      "tag": "0020_wandering_doctor_faustus",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1784597878939,
+      "tag": "0020_happy_the_enforcers",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "6",
+      "when": 1784599000000,
+      "tag": "0021_runtime_project_heartbeat",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "6",
+      "when": 1784601000000,
+      "tag": "0022_workspace_governance",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "6",
+      "when": 1784602800000,
+      "tag": "0023_workspace_contracts",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1784604600000,
+      "tag": "0024_execution_context_checkpoints",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "6",
+      "when": 1784606400000,
+      "tag": "0025_workflow_run_controls",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "6",
+      "when": 1784608200000,
+      "tag": "0026_workflow_run_targets",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "6",
+      "when": 1784609400000,
+      "tag": "0027_workflow_run_agent_targets",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "6",
+      "when": 1784611200000,
+      "tag": "0028_workflow_run_execution_context",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "6",
+      "when": 1784613000000,
+      "tag": "0029_workflow_run_context_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "6",
+      "when": 1784614800000,
+      "tag": "0030_workflow_run_worktrees",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "6",
+      "when": 1784616600000,
+      "tag": "0031_orchestration_proposals",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "6",
+      "when": 1784618400000,
+      "tag": "0032_orchestration_proposal_reviews",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "6",
+      "when": 1784620200000,
+      "tag": "0033_orchestration_proposal_executions",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "6",
+      "when": 1784622000000,
+      "tag": "0034_canvas_node_z_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "6",
+      "when": 1784623800000,
+      "tag": "0035_backfill_artifact_memories",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "6",
+      "when": 1784625600000,
+      "tag": "0036_artifact_memory_restore_provenance",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "6",
+      "when": 1784627400000,
+      "tag": "0037_artifact_version_feedback",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "6",
+      "when": 1784629200000,
+      "tag": "0038_workflow_retry_scope",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "6",
+      "when": 1784631000000,
+      "tag": "0039_workflow_retry_lineage",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "6",
+      "when": 1784661600000,
+      "tag": "0040_context_selection",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "6",
+      "when": 1784685000000,
+      "tag": "0041_supervised_autonomy",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "6",
+      "when": 1784700000000,
+      "tag": "0042_workflow_drafts",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "6",
+      "when": 1784710000000,
+      "tag": "0043_workflow_activations",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "6",
+      "when": 1784720000000,
+      "tag": "0044_automatic_mode",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "6",
+      "when": 1785074400000,
+      "tag": "0045_workflow_node_prompts",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "6",
+      "when": 1785196800000,
+      "tag": "0046_agent_message_awaited",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "6",
+      "when": 1785200400000,
+      "tag": "0047_agent_lifecycle_commands",
+      "breakpoints": true
+    }
+  ]
+}

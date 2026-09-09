@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://forgedeck.dev/schemas/workflow.schema.json",
+  "title": "ForgeDeck Workflow 1.0",
+  "type": "object",
+  "required": ["schema_version", "id", "name", "nodes"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "description": { "type": "string", "maxLength": 2000 },
+    "concurrency": { "type": "integer", "minimum": 1, "maximum": 32, "default": 1 },
+    "permissions": { "$ref": "#/$defs/permissions" },
+    "inputs": { "type": "object", "default": {}, "additionalProperties": true },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1000,
+      "items": { "$ref": "#/$defs/node" }
+    }
+  },
+  "$defs": {
+    "permissions": {
+      "type": "object",
+      "properties": {
+        "process": { "type": "boolean" },
+        "workspace_read": { "type": "boolean" },
+        "workspace_write": { "type": "boolean" },
+        "network": { "type": "boolean" },
+        "git_read": { "type": "boolean" },
+        "git_write": { "type": "boolean" },
+        "destructive": { "type": "boolean" }
+      },
+      "additionalProperties": false,
+      "default": {}
+    },
+    "command": {
+      "type": "object",
+      "required": ["executable"],
+      "properties": {
+        "executable": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "args": {
+          "type": "array",
+          "maxItems": 256,
+          "items": { "type": "string", "maxLength": 8192 },
+          "default": []
+        }
+      },
+      "additionalProperties": false
+    },
+    "retry": {
+      "type": "object",
+      "properties": {
+        "max_attempts": { "type": "integer", "minimum": 1, "maximum": 10, "default": 1 },
+        "backoff_ms": { "type": "integer", "minimum": 0, "maximum": 60000, "default": 0 },
+        "retry_on": {
+          "type": "array",
+          "items": {
+            "enum": ["process_exit_nonzero", "timeout", "adapter_unavailable", "transient_error"]
+          },
+          "default": []
+        }
+      },
+      "additionalProperties": false,
+      "default": { "max_attempts": 1, "backoff_ms": 0, "retry_on": [] }
+    },
+    "resource": {
+      "type": "object",
+      "required": ["type", "key"],
+      "properties": {
+        "type": {
+          "enum": [
+            "project",
+            "branch",
+            "worktree",
+            "port",
+            "file_glob",
+            "environment",
+            "adapter_session"
+          ]
+        },
+        "key": { "type": "string", "minLength": 1, "maxLength": 1024 }
+      },
+      "additionalProperties": false
+    },
+    "node": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9_-]+$" },
+        "type": {
+          "enum": [
+            "agent",
+            "shell",
+            "human_approval",
+            "quality_gate",
+            "artifact",
+            "transform",
+            "parallel_group",
+            "subworkflow"
+          ]
+        },
+        "title": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "depends_on": { "type": "array", "items": { "type": "string" }, "default": [] },
+        "adapter": { "type": "string", "minLength": 1 },
+        "role": { "type": "string", "maxLength": 160 },
+        "command": { "$ref": "#/$defs/command" },
+        "timeout_ms": { "type": "integer", "minimum": 1, "maximum": 3600000 },
+        "isolation": { "enum": ["none", "git_worktree"], "default": "none" },
+        "permissions": { "$ref": "#/$defs/permissions" },
+        "resources": {
+          "type": "array",
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/resource" },
+          "default": []
+        },
+        "retry": { "$ref": "#/$defs/retry" },
+        "output": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

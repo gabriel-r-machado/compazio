@@ -1,0 +1,27 @@
+{
+  "id": "claude-code",
+  "displayName": "Claude Code",
+  "version": "0.1.0",
+  "executables": [
+    "claude",
+    "claude.exe"
+  ],
+  "platforms": [
+    "win32",
+    "darwin",
+    "linux"
+  ],
+  "capabilities": {
+    "interactive": true,
+    "nonInteractive": true,
+    "resume": true,
+    "structuredOutput": false,
+    "mcp": true,
+    "imageInput": true
+  },
+  "permissions": [
+    "filesystem",
+    "process",
+    "network-by-provider"
+  ]
+}

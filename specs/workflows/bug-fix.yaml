@@ -1,0 +1,44 @@
+schema_version: "1.0"
+id: bug-fix
+name: Reproduce, Fix, Verify
+concurrency: 2
+
+inputs:
+  bug_report:
+    type: string
+    required: true
+
+nodes:
+  - id: reproduce
+    type: agent
+    role: investigator
+    adapter: user_selected
+    output:
+      artifact: reports/reproduction.md
+
+  - id: approve_diagnosis
+    type: human_approval
+    depends_on: [reproduce]
+
+  - id: implement_fix
+    type: agent
+    role: implementer
+    adapter: user_selected
+    depends_on: [approve_diagnosis]
+    isolation: git_worktree
+
+  - id: regression_test
+    type: quality_gate
+    depends_on: [implement_fix]
+    command: pnpm test
+
+  - id: review
+    type: agent
+    role: reviewer
+    adapter: user_selected
+    depends_on: [implement_fix]
+
+  - id: report
+    type: artifact
+    depends_on: [regression_test, review]
+    template: bugfix-report

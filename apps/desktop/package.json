@@ -1,0 +1,157 @@
+{
+  "name": "@forgedeck/desktop",
+  "version": "0.2.0-beta.1",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "homepage": "https://github.com/gabriel-r-machado/compazio-releases",
+  "description": "Orquestração visual de agentes e terminais.",
+  "author": {
+    "name": "Compazio",
+    "email": "support@compazio.dev"
+  },
+  "type": "module",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "build": "electron-vite build",
+    "build:v2": "electron-vite build --config electron.vite.v2.config.ts",
+    "dev": "electron-vite dev",
+    "dev:v2": "electron-vite dev --config electron.vite.v2.config.ts --entry out-v2/main/index.js",
+    "native:electron": "node scripts/native-electron.mjs",
+    "native:node": "node scripts/native-node.mjs",
+    "test:electron-smoke": "node e2e/workflow-smoke.driver.mjs",
+    "package:prepare": "pnpm run build:v2 && pnpm run native:electron",
+    "package": "pnpm run package:windows",
+    "package:windows": "pnpm run package:prepare && electron-builder --config electron-builder.json --win nsis --x64 --publish never",
+    "package:mac:arm64": "pnpm run package:prepare && electron-builder --config electron-builder.json --mac dmg --arm64 --publish never",
+    "package:mac:x64": "pnpm run package:prepare && electron-builder --config electron-builder.json --mac dmg --x64 --publish never",
+    "package:linux": "pnpm run package:prepare && electron-builder --config electron-builder.json --linux AppImage deb --x64 --publish never",
+    "preview": "electron-vite preview",
+    "release:manifest": "tsx src/main/release-artifacts-cli.ts",
+    "release:smoke:windows": "node scripts/packaged-smoke.mjs",
+    "release:smoke:package": "node scripts/package-smoke.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "smoke:v2": "node scripts/v2-smoke.mjs",
+    "test:portal-integration": "node scripts/portal-integration.mjs",
+    "smoke:portals": "node scripts/portal-smoke.mjs",
+    "typecheck:portal-real-agents": "node scripts/typecheck-portal-real-agents.mjs",
+    "typecheck:compazio-teams": "node scripts/typecheck-compazio-teams.mjs",
+    "test:portal-agent-harness": "vitest run --root ../.. apps/desktop/src/v2/main/portal-agent-harness.test.ts",
+    "test:portal-real-agents": "node scripts/portal-real-agents.mjs",
+    "test:portal-real-agent": "node scripts/portal-real-agents.mjs",
+    "test:portal-mcp-real-agents": "node scripts/portal-mcp-real-agents.mjs",
+    "test:compazio-real-agents": "tsx src/v2/main/e2e/compazio-real-agents.ts",
+    "workspace:cleanup": "tsx scripts/workspace-cleanup.ts",
+    "test:adapter:claude-local": "tsx scripts/claude-local-adapter-check.ts",
+    "test:adapter:codex-local": "tsx scripts/codex-local-adapter-check.ts",
+    "test:adapter:opencode-local": "tsx scripts/opencode-local-adapter-check.ts",
+    "test:beta3-agent-stress": "node scripts/beta3-agent-stress.mjs",
+    "test:beta3-security-abuse": "node scripts/beta3-security-abuse.mjs",
+    "test:beta3-chaos": "tsx scripts/beta3-chaos-500.ts",
+    "test:multi-agent:e2e-local": "tsx scripts/multi-agent-e2e-local-check.ts",
+    "test:orchestrator:codex-local": "tsx scripts/codex-orchestrator-local-check.ts",
+    "test:orchestrator:opencode-local": "tsx scripts/opencode-orchestrator-local-check.ts",
+    "test:automatic:claude-local": "tsx scripts/automatic-claude-local-check.ts",
+    "test:automatic:e2e-local": "tsx scripts/automatic-e2e-local-check.ts",
+    "test:e2e": "node scripts/smoke.mjs",
+    "test:beta-e2e": "node scripts/beta-e2e.mjs",
+    "test:beta-e2e-real": "node scripts/beta-e2e-real.mjs",
+    "typecheck": "tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.web.json --noEmit && tsc -p tsconfig.v2portal.json --noEmit && tsc -p tsconfig.v2licensing.json --noEmit"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "5.3.0",
+    "@fontsource-variable/jetbrains-mono": "5.3.0",
+    "@fontsource-variable/manrope": "5.3.0",
+    "@forgedeck/agent-adapters": "workspace:*",
+    "@forgedeck/agent-sdk": "workspace:*",
+    "@forgedeck/cli": "workspace:*",
+    "@forgedeck/compazio-v2-domain": "workspace:*",
+    "@forgedeck/compazio-v2-persistence": "workspace:*",
+    "@forgedeck/compazio-v2-runtime": "workspace:*",
+    "@forgedeck/config": "workspace:*",
+    "@forgedeck/core": "workspace:*",
+    "@forgedeck/git": "workspace:*",
+    "@forgedeck/local-db": "workspace:*",
+    "@forgedeck/logger": "workspace:*",
+    "@forgedeck/orchestration": "workspace:*",
+    "@forgedeck/schemas": "workspace:*",
+    "@forgedeck/terminal": "workspace:*",
+    "@forgedeck/ui": "workspace:*",
+    "@forgedeck/workflow": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@xterm/addon-fit": "0.11.0",
+    "@xterm/addon-webgl": "0.19.0",
+    "@xterm/xterm": "6.0.0",
+    "@xyflow/react": "12.11.2",
+    "better-sqlite3": "12.11.1",
+    "electron-updater": "6.6.2",
+    "node-pty": "1.1.0",
+    "pdfjs-dist": "6.2.108",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "zod": "4.4.3",
+    "zustand": "5.0.14"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "4.2.0",
+    "@swc/core": "1.15.43",
+    "@types/better-sqlite3": "7.6.13",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "5.2.0",
+    "electron": "43.1.1",
+    "electron-builder": "26.15.3",
+    "electron-vite": "5.0.0",
+    "vite": "7.3.6"
+  },
+  "build": {
+    "appId": "com.compazio.desktop",
+    "productName": "Compazio",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "npmRebuild": false,
+    "asarUnpack": [
+      "**/node_modules/better-sqlite3/**",
+      "**/node_modules/node-pty/**"
+    ],
+    "extraResources": [
+      {
+        "from": "../../packages/local-db/drizzle",
+        "to": "drizzle"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "linux": {
+      "category": "Development",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    }
+  }
+}

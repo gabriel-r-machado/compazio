@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/gabriel-r-machado/compazio/security
+    about: Please use the private security reporting flow when it is enabled. Do not disclose vulnerabilities in public issues.

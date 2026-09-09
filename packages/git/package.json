@@ -1,0 +1,25 @@
+{
+  "name": "@forgedeck/git",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@forgedeck/agent-adapters": "workspace:*",
+    "@forgedeck/agent-sdk": "workspace:*",
+    "@forgedeck/logger": "workspace:*",
+    "@forgedeck/orchestration": "workspace:*",
+    "@forgedeck/workflow": "workspace:*",
+    "simple-git": "3.36.0",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.1"
+  }
+}

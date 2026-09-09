@@ -1,0 +1,26 @@
+{
+  "name": "@forgedeck/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/cli.ts",
+    "./bin": "./src/bin.ts"
+  },
+  "bin": {
+    "compasso": "./scripts/run.mjs"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "compasso": "node scripts/run.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@forgedeck/local-db": "workspace:*",
+    "@forgedeck/schemas": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.1",
+    "tsx": "4.23.1"
+  }
+}

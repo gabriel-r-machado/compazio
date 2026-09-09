@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://forgedeck.dev/schemas/agent-adapter.schema.json",
+  "title": "ForgeDeck Agent Adapter Manifest",
+  "type": "object",
+  "required": ["id", "displayName", "version", "executables", "platforms", "capabilities"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "displayName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string"
+    },
+    "executables": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "platforms": {
+      "type": "array",
+      "items": {
+        "enum": ["win32", "darwin", "linux"]
+      },
+      "minItems": 1
+    },
+    "capabilities": {
+      "type": "object",
+      "required": ["interactive", "nonInteractive", "resume", "structuredOutput", "mcp"],
+      "properties": {
+        "interactive": {
+          "type": "boolean"
+        },
+        "nonInteractive": {
+          "type": "boolean"
+        },
+        "resume": {
+          "type": "boolean"
+        },
+        "structuredOutput": {
+          "type": "boolean"
+        },
+        "mcp": {
+          "type": "boolean"
+        },
+        "imageInput": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

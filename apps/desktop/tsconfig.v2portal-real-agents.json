@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node", "electron-vite/node"],
+    // The runner reaches into V2 modules that predate any typecheck and still carry errors of their
+    // own. Their declarations are trusted here; what must never break again is the harness itself —
+    // the session contract, the command builders and the probe.
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": [
+    "src/v2/main/e2e/portal-real-agents.ts",
+    "src/v2/main/portal-agent-harness.ts",
+    "src/v2/main/portal-agent-commands.ts"
+  ]
+}

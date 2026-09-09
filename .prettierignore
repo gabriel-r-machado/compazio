@@ -1,0 +1,10 @@
+.next
+coverage
+dist
+node_modules
+out
+pnpm-lock.yaml
+packages/local-db/drizzle/meta
+out-e2e
+artifacts
+.codex-artifacts

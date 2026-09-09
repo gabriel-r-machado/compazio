@@ -1,0 +1,16 @@
+# Default owner
+* @gabriel-r-machado
+
+# Security-sensitive surfaces
+/apps/desktop/src/main/ @gabriel-r-machado
+/apps/desktop/src/v2/main/ @gabriel-r-machado
+/apps/desktop/src/preload/ @gabriel-r-machado
+/packages/terminal/ @gabriel-r-machado
+/packages/agent-adapters/ @gabriel-r-machado
+/packages/local-db/ @gabriel-r-machado
+/supabase/ @gabriel-r-machado
+/scripts/licensing/ @gabriel-r-machado
+/scripts/release/ @gabriel-r-machado
+/.github/workflows/ @gabriel-r-machado
+/SECURITY.md @gabriel-r-machado
+/LICENSE @gabriel-r-machado

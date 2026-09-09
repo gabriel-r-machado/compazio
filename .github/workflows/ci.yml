@@ -1,0 +1,115 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  cloud-database:
+    name: Cloud database (Supabase RLS)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.20.0
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Start local Supabase
+        run: pnpm exec supabase start
+
+      - name: Run RLS and billing database tests
+        run: pnpm exec supabase test db --local supabase/tests/database
+
+      - name: Check database security advisors
+        run: pnpm exec supabase db advisors --local --type security --fail-on error
+
+  quality:
+    name: Quality (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.20.0
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: ESLint
+        run: pnpm exec eslint . --max-warnings 0
+
+      # Prettier checks text bytes, so checking on a Windows checkout can flag
+      # repository-wide CRLF conversions even when the canonical files are formatted.
+      - name: Format check
+        if: runner.os == 'Linux'
+        run: pnpm format:check
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # The packaged beta target is Windows x64. Keep portable static/unit coverage on all
+      # runners, while process/native/integration and real Electron acceptance run on Windows.
+      - name: Unit tests (complete Windows suite)
+        if: runner.os == 'Windows'
+        run: pnpm exec vitest run --testTimeout=15000
+
+      - name: Unit tests (portable suites)
+        if: runner.os != 'Windows'
+        run: >-
+          pnpm exec vitest run
+          --exclude "packages/cli/src/cli.test.ts"
+          --exclude "packages/compazio-v2-runtime/src/agents.test.ts"
+
+      - name: Integration tests (Windows release target)
+        if: runner.os == 'Windows'
+        # Cold GitHub Windows runners can make SQLite/process-heavy integration cases
+        # exceed the local 15s default even when they are making steady progress.
+        # Individual bridge process launches keep their own tighter bounded timeouts.
+        run: pnpm exec vitest run --config vitest.integration.config.ts --testTimeout=60000
+
+      - name: Run local migration (Windows release target)
+        if: runner.os == 'Windows'
+        run: pnpm db:migrate
+
+      - name: Rebuild desktop native modules (Windows release target)
+        if: runner.os == 'Windows'
+        run: pnpm --filter @forgedeck/desktop native:electron
+
+      - name: Build (Windows release target)
+        if: runner.os == 'Windows'
+        run: pnpm build
+
+      - name: Desktop E2E smoke (Windows release target)
+        if: runner.os == 'Windows'
+        run: pnpm test:e2e

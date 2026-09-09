@@ -1,0 +1,51 @@
+name: DCO
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  signoff:
+    # Existing private history predates the DCO policy. Start enforcing it for
+    # community pull requests once the repository is public.
+    if: ${{ github.event.repository.private == false }}
+    name: Verify commit sign-offs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout pull request history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify DCO sign-offs
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          merge_base="$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
+          mapfile -t commits < <(git rev-list --no-merges "$merge_base..$HEAD_SHA")
+
+          if [[ ${#commits[@]} -eq 0 ]]; then
+            echo "No non-merge commits to verify."
+            exit 0
+          fi
+
+          failed=0
+          for commit in "${commits[@]}"; do
+            if git show -s --format='%B' "$commit" | grep -Eiq '^Signed-off-by: .+ <[^>]+>$'; then
+              echo "✓ $commit"
+            else
+              echo "::error::Commit $commit is missing a Signed-off-by trailer. Use git commit -s and update the pull request."
+              failed=1
+            fi
+          done
+
+          exit "$failed"

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://forgedeck.dev/schemas/run-event.schema.json",
+  "title": "ForgeDeck Run Event 1.0",
+  "type": "object",
+  "required": [
+    "id",
+    "runId",
+    "nodeRunId",
+    "type",
+    "timestamp",
+    "schemaVersion",
+    "sequence",
+    "payload"
+  ],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "runId": { "type": "string", "minLength": 1 },
+    "nodeRunId": { "type": ["string", "null"] },
+    "type": {
+      "enum": [
+        "run.created",
+        "run.started",
+        "run.completed",
+        "run.failed",
+        "run.interrupted",
+        "node.ready",
+        "node.started",
+        "node.waiting",
+        "node.blocked",
+        "node.succeeded",
+        "node.failed",
+        "node.retry_scheduled",
+        "approval.requested",
+        "approval.resolved",
+        "artifact.created",
+        "handoff.created",
+        "report.created"
+      ]
+    },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "schemaVersion": { "const": "1.0" },
+    "sequence": { "type": "integer", "minimum": 1 },
+    "payload": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": false
+}

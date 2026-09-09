@@ -1,0 +1,30 @@
+packages:
+  - apps/*
+  - packages/*
+
+catalog:
+  zod: 4.4.3
+
+overrides:
+  "@esbuild-kit/core-utils>esbuild": 0.25.12
+  postcss: 8.5.19
+
+allowBuilds:
+  "@swc/core": true
+  better-sqlite3: true
+  electron: true
+  electron-winstaller: true
+  esbuild: true
+  node-pty: true
+  sharp: true
+
+minimumReleaseAgeExclude:
+  - "@supabase/auth-js@2.110.6"
+  - "@supabase/functions-js@2.110.6"
+  - "@supabase/postgrest-js@2.110.6"
+  - "@supabase/realtime-js@2.110.6"
+  - "@supabase/storage-js@2.110.6"
+  - "@supabase/supabase-js@2.110.6"
+  - "@fontsource-variable/geist@5.3.0"
+  - "@fontsource-variable/inter@5.3.0"
+  - "@fontsource-variable/jetbrains-mono@5.3.0"

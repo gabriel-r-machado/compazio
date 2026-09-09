@@ -1,0 +1,31 @@
+schema_version: "1.0"
+project:
+  display_name: Example SaaS
+  default_branch: main
+  package_manager: pnpm
+
+runtime:
+  max_parallel_runs: 4
+  terminal_buffer_lines: 10000
+
+permissions:
+  default:
+    filesystem: workspace
+    git: read_write_worktree
+    network: provider_only
+  destructive_commands:
+    require_approval: true
+
+quality:
+  commands:
+    lint: pnpm lint
+    typecheck: pnpm typecheck
+    test: pnpm test
+    build: pnpm build
+
+sync:
+  enabled: false
+  include:
+    - run_status
+    - duration
+    - sanitized_summary

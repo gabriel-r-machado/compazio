@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  // The workspace creation gate and its isolation helpers are typechecked even though the wider V2
+  // tree still is not: a silent type regression here is what let the free limit be bypassed.
+  "include": [
+    "src/v2/main/entitlement-service.ts",
+    "src/v2/main/entitlement-service.test.ts",
+    "src/v2/main/testing/*.ts",
+    "scripts/workspace-cleanup.ts",
+    "scripts/workspace-cleanup-rules.ts",
+    "scripts/workspace-cleanup-rules.test.ts"
+  ]
+}

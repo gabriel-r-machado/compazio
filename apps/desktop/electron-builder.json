@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json.schemastore.org/electron-builder",
+  "appId": "com.compazio.desktop",
+  "productName": "Compazio",
+  "copyright": "Copyright © 2026 Compazio",
+  "publish": [
+    {
+      "provider": "github",
+      "owner": "gabriel-r-machado",
+      "repo": "compazio-releases",
+      "channel": "beta",
+      "releaseType": "prerelease"
+    }
+  ],
+  "generateUpdatesFilesForAllChannels": true,
+  "detectUpdateChannel": true,
+  "extraMetadata": {
+    "main": "./out-v2/main/index.js",
+    "description": "Orquestração visual de agentes e terminais."
+  },
+  "directories": {
+    "buildResources": "build",
+    "output": "release"
+  },
+  "files": [
+    "out-v2/**/*",
+    "package.json",
+    "!**/*.map",
+    "!**/*.ts",
+    "!**/*.test.*",
+    "!**/e2e/**",
+    "!**/scripts/**",
+    "!**/.env*",
+    "!**/.claude/**",
+    "!**/.codex/**",
+    "!**/coverage/**",
+    "!**/release/**"
+  ],
+  "asar": false,
+  "npmRebuild": false,
+  "extraResources": [
+    {
+      "from": "../../packages/local-db/drizzle",
+      "to": "drizzle"
+    }
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      }
+    ],
+    "artifactName": "Compazio-Setup-${version}.${ext}",
+    "executableName": "Compazio",
+    "icon": "build/icon.ico",
+    "requestedExecutionLevel": "asInvoker",
+    "signAndEditExecutable": true
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowElevation": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Compazio",
+    "runAfterFinish": false
+  },
+  "mac": {
+    "target": [
+      {
+        "target": "dmg",
+        "arch": ["arm64", "x64"]
+      }
+    ],
+    "artifactName": "Compazio-${version}-${arch}.${ext}",
+    "category": "public.app-category.developer-tools",
+    "icon": "build/icon.icns",
+    "hardenedRuntime": false,
+    "gatekeeperAssess": false
+  },
+  "dmg": {
+    "artifactName": "Compazio-${version}-${arch}.${ext}",
+    "title": "Compazio ${version}"
+  },
+  "linux": {
+    "target": [
+      {
+        "target": "AppImage",
+        "arch": ["x64"]
+      },
+      {
+        "target": "deb",
+        "arch": ["x64"]
+      }
+    ],
+    "artifactName": "Compazio-${version}-${arch}.${ext}",
+    "category": "Development",
+    "icon": "build/icon.png",
+    "executableName": "compazio",
+    "synopsis": "Orquestração visual de agentes e terminais.",
+    "description": "Orquestração visual de agentes e terminais."
+  },
+  "appImage": {
+    "artifactName": "Compazio-${version}-${arch}.${ext}"
+  },
+  "deb": {
+    "artifactName": "compazio_${version}_${arch}.${ext}"
+  }
+}

@@ -1,0 +1,1 @@
+-- Intentionally empty. Local test data belongs in pgTAP transactions.

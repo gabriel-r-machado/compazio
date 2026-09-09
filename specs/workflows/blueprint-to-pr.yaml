@@ -1,0 +1,91 @@
+schema_version: "1.0"
+id: blueprint-to-pr
+name: Blueprint to PR
+description: Converte uma especificação aprovada em implementação paralela validada.
+concurrency: 3
+
+inputs:
+  objective:
+    type: string
+    required: true
+  base_branch:
+    type: string
+    default: main
+
+nodes:
+  - id: refine_spec
+    type: agent
+    adapter: user_selected
+    role: product_engineer
+    permissions:
+      filesystem: read_write_workspace
+      git: read
+    output:
+      artifact: specs/refined-spec.md
+
+  - id: approve_spec
+    type: human_approval
+    depends_on: [refine_spec]
+    input_artifact: specs/refined-spec.md
+
+  - id: plan_tasks
+    type: agent
+    adapter: user_selected
+    role: tech_lead
+    depends_on: [approve_spec]
+    output:
+      artifact: specs/task-plan.json
+      schema: ../schemas/workflow.schema.json
+
+  - id: approve_plan
+    type: human_approval
+    depends_on: [plan_tasks]
+
+  - id: implement
+    type: parallel_group
+    depends_on: [approve_plan]
+    strategy: generated_tasks
+    isolation: git_worktree
+    max_parallel: 3
+
+  - id: review
+    type: agent
+    adapter: user_selected
+    role: reviewer
+    depends_on: [implement]
+    permissions:
+      filesystem: read_workspace
+      git: read
+    output:
+      artifact: reports/review.md
+
+  - id: lint
+    type: quality_gate
+    depends_on: [implement]
+    command: pnpm lint
+    timeout_ms: 600000
+
+  - id: typecheck
+    type: quality_gate
+    depends_on: [implement]
+    command: pnpm typecheck
+    timeout_ms: 600000
+
+  - id: test
+    type: quality_gate
+    depends_on: [implement]
+    command: pnpm test
+    timeout_ms: 900000
+
+  - id: build
+    type: quality_gate
+    depends_on: [lint, typecheck, test]
+    command: pnpm build
+    timeout_ms: 900000
+
+  - id: final_report
+    type: artifact
+    depends_on: [review, build]
+    template: pr-report
+    output:
+      artifact: reports/pr-ready.md

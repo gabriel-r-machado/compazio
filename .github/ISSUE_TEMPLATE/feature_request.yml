@@ -1,0 +1,46 @@
+name: Feature request
+description: Propose a focused improvement to Compazio
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: Describe the user/developer problem before proposing implementation details.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Explain the behavior you would like to see.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Optional. Mention workarounds or other designs you considered.
+  - type: checkboxes
+    id: impact
+    attributes:
+      label: Areas potentially affected
+      options:
+        - label: Electron / IPC
+        - label: Process execution / terminals
+        - label: Filesystem / persistence
+        - label: Portal / MCP / agent capabilities
+        - label: Cloud / Supabase / licensing
+        - label: UI only
+        - label: Documentation / developer experience
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and discussions first.
+          required: true
+        - label: This request does not contain secrets or private workspace data.
+          required: true
