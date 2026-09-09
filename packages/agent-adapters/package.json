@@ -14,6 +14,6 @@
     "@forgedeck/agent-sdk": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "22.20.1"
+    "@types/node": "26.4.1"
   }
 }
