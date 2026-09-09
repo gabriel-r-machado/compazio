@@ -13,17 +13,17 @@
     "@forgedeck/core": "workspace:*",
     "@forgedeck/schemas": "workspace:*",
     "@forgedeck/ui": "workspace:*",
-    "@supabase/ssr": "0.12.3",
-    "@supabase/supabase-js": "2.110.6",
-    "next": "16.2.10",
-    "react": "19.2.7",
-    "react-dom": "19.2.7",
+    "@supabase/ssr": "0.12.6",
+    "@supabase/supabase-js": "2.115.0",
+    "next": "16.3.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@types/node": "22.20.1",
-    "@types/react": "19.2.17",
-    "@types/react-dom": "19.2.3",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
     "typescript": "6.0.3"
   }
 }
