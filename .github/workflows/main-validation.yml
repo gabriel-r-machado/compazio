@@ -43,10 +43,7 @@ jobs:
 
   windows-desktop:
     name: Windows desktop
-    # Pin the smoke suite to a stable Windows image. windows-latest currently resolves to
-    # Server 2025, whose ConPTY forwards DEC mouse-mode sequences differently and trips a
-    # harness-only assertion even though the application path itself remains valid.
-    runs-on: windows-2022
+    runs-on: windows-latest
     timeout-minutes: 60
 
     steps:
