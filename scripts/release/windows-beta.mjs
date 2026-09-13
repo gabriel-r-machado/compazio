@@ -14,7 +14,6 @@ const installerName = `Compazio-Setup-${version}.exe`;
 
 if (process.platform !== "win32") throw new Error("Windows beta packaging requires Windows");
 await assertGitReady();
-await assertBaseTag();
 
 await runPnpm("restore host native modules", ["--filter", "@forgedeck/desktop", "native:node"]);
 try {
@@ -145,18 +144,6 @@ async function hasValidAuthenticodeSignature(filename) {
   return status.trim() === "Valid";
 }
 
-async function assertBaseTag() {
-  const exists = await capture("git", ["show-ref", "--verify", "refs/tags/v2-beta-ui-stable"]);
-  if (exists.trim() === "") throw new Error("v2-beta-ui-stable tag is missing");
-  const ancestor = await runExitCode("git", [
-    "merge-base",
-    "--is-ancestor",
-    "v2-beta-ui-stable",
-    "HEAD"
-  ]);
-  if (ancestor !== 0) throw new Error("HEAD is not based on v2-beta-ui-stable");
-}
-
 async function sha256(filename) {
   const content = await readFile(filename);
   return createHash("sha256").update(content).digest("hex");
@@ -196,14 +183,6 @@ function runPnpm(label, args) {
 
 function quoteWindowsArgument(argument) {
   return /^[a-zA-Z0-9_@./:-]+$/.test(argument) ? argument : `"${argument.replaceAll('"', '\\"')}"`;
-}
-
-function runExitCode(command, args) {
-  return new Promise((resolvePromise, reject) => {
-    const child = spawn(command, args, { cwd: repoRoot, windowsHide: true, stdio: "ignore" });
-    child.once("error", reject);
-    child.once("exit", (code) => resolvePromise(code ?? 1));
-  });
 }
 
 function capture(command, args) {

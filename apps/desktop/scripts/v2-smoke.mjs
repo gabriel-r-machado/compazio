@@ -35,7 +35,7 @@ const freeLicenseDataDirectory = join(freeLicenseUserData, "compazio", "v2");
 const singleInstanceUserData = await mkdtemp(join(tmpdir(), "compazio-v2-single-instance-user-"));
 const installedDataDirectory = join(
   process.env.APPDATA ?? join(tmpdir(), "compazio-absent"),
-  "Compazio",
+  "Compazio Community",
   "compazio",
   "v2"
 );
@@ -302,7 +302,7 @@ main().catch(error => { console.error(error); process.exit(2); });
   }
   // This launch deliberately has no test-harness marker and no unlimited flag. It crosses the
   // real renderer → preload → typed IPC boundary with the product's free entitlement and proves
-  // the second workspace is denied before the repository writes it.
+  // two workspaces persist without activation.
   if (!focusedTerminalJourney)
     await run(
       "Electron V2 free-license acceptance",
@@ -323,9 +323,9 @@ main().catch(error => { console.error(error); process.exit(2); });
   const freeWorkspaceFiles = focusedTerminalJourney
     ? []
     : await workspaceFiles(freeLicenseDataDirectory);
-  if (!focusedTerminalJourney && freeWorkspaceFiles.length !== 1)
+  if (!focusedTerminalJourney && freeWorkspaceFiles.length !== 2)
     throw new Error(
-      `Free-license acceptance expected exactly one persisted workspace, found ${freeWorkspaceFiles.length}.`
+      `Free-license acceptance expected exactly two persisted workspaces, found ${freeWorkspaceFiles.length}.`
     );
   const installedWorkspacesAfter = focusedTerminalJourney
     ? installedWorkspacesBefore

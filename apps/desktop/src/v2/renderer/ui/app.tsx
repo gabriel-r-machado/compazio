@@ -48,7 +48,7 @@ import { FilePreviewCard, FileTreeCard } from "./file-ui";
 import { PromptComposer } from "./prompt-composer";
 import { MarkdownPreview } from "./markdown";
 import { CompazioMark, ToolIcon } from "./brand";
-import { isFreeWorkspaceLimitError, userFacingIpcError } from "./ipc-errors";
+import { userFacingIpcError } from "./ipc-errors";
 import { connectionFor } from "./connection-capabilities";
 import {
   ZOOM_STEP,
@@ -188,10 +188,6 @@ export function V2App() {
   const [cutMode, setCutMode] = useState(false);
   const [connectionSourceId, setConnectionSourceId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [licenseStatus, setLicenseStatus] = useState<Awaited<
-    ReturnType<typeof window.compazioV2.license.status>
-  > | null>(null);
-  const [licenseDialogOpen, setLicenseDialogOpen] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<Awaited<
     ReturnType<typeof window.compazioV2.updates.status>
   > | null>(null);
@@ -307,10 +303,6 @@ export function V2App() {
       await operation();
       setMessage(null);
     } catch (error: unknown) {
-      if (isFreeWorkspaceLimitError(error)) {
-        setLicenseDialogOpen(true);
-        return;
-      }
       setMessage(userFacingIpcError(error, "A operação não pôde ser concluída."));
     }
   }, []);
@@ -370,10 +362,6 @@ export function V2App() {
         }
       })();
       void refreshAgentData().catch(toMessage(setMessage));
-      void window.compazioV2.license
-        .status()
-        .then(setLicenseStatus)
-        .catch(() => undefined);
       void window.compazioV2.updates
         .status()
         .then(setUpdateStatus)
@@ -806,7 +794,6 @@ export function V2App() {
       terminalDialog !== null ||
       workspaceDialogOpen ||
       roleLibraryOpen ||
-      licenseDialogOpen ||
       updateDialogOpen ||
       shortcutsOpen ||
       pendingNodeDeletion !== null ||
@@ -824,7 +811,6 @@ export function V2App() {
     composerTerminalId,
     confirmation,
     contextMenu,
-    licenseDialogOpen,
     moreMenuOpen,
     inspectorOpen,
     pendingNodeDeletion,
@@ -1685,9 +1671,6 @@ export function V2App() {
           )}
         </nav>
         <div className="v2-sidebar-footer">
-          <button className="v2-quiet" onClick={() => setLicenseDialogOpen(true)}>
-            Licença
-          </button>
           <button className="v2-quiet" onClick={() => setShortcutsOpen(true)}>
             Atalhos
           </button>
@@ -2741,17 +2724,6 @@ export function V2App() {
             onSubmit={createWorkspaceFromDialog}
           />
         )}
-        {licenseDialogOpen && (
-          <LicenseDialog
-            status={licenseStatus}
-            onClose={() => setLicenseDialogOpen(false)}
-            onActivated={(next) => {
-              setLicenseStatus(next);
-              setLicenseDialogOpen(false);
-              setMessage("Licença ativada. Você já pode criar novos workspaces.");
-            }}
-          />
-        )}
         {updateDialogOpen && (
           <UpdateDialog
             status={updateStatus}
@@ -2958,83 +2930,6 @@ function UpdateDialog({
           )}
         </div>
       </section>
-    </div>
-  );
-}
-
-function LicenseDialog({
-  status,
-  onClose,
-  onActivated
-}: {
-  readonly status: Awaited<ReturnType<typeof window.compazioV2.license.status>> | null;
-  readonly onClose: () => void;
-  readonly onActivated: (
-    status: Awaited<ReturnType<typeof window.compazioV2.license.status>>
-  ) => void;
-}) {
-  const [code, setCode] = useState("");
-  const [state, setState] = useState<"idle" | "validating" | "error">("idle");
-  const [error, setError] = useState<string | null>(null);
-  return (
-    <div className="v2-modal-backdrop" role="presentation" onMouseDown={onClose}>
-      <form
-        className="v2-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="v2-license-title"
-        onMouseDown={(event) => event.stopPropagation()}
-        onSubmit={(event) => {
-          event.preventDefault();
-          setState("validating");
-          setError(null);
-          void window.compazioV2.license
-            .activate({ licenseCode: code })
-            .then(onActivated)
-            .catch((reason: unknown) => {
-              setState("error");
-              setError(userFacingIpcError(reason, "Não foi possível ativar a licença."));
-            })
-            .finally(() => setState((current) => (current === "validating" ? "idle" : current)));
-        }}
-      >
-        <p className="v2-eyebrow">Licença</p>
-        <h2 id="v2-license-title">Ative workspaces ilimitados</h2>
-        <p>
-          O beta gratuito permite um workspace por instalação. Seu workspace atual continuará
-          disponível.
-        </p>
-        <label>
-          Código de licença
-          <input
-            autoFocus
-            value={code}
-            onChange={(event) => setCode(event.target.value.toUpperCase())}
-            placeholder="CMPZ-XXXX-XXXX-XXXX-XXXX"
-            autoComplete="off"
-          />
-        </label>
-        {error !== null && (
-          <p role="alert" className="v2-error">
-            {error}
-          </p>
-        )}
-        {status?.plan === "beta_unlimited" && (
-          <p className="v2-muted">Plano beta ativo neste dispositivo.</p>
-        )}
-        <div className="v2-modal-actions">
-          <button type="button" onClick={onClose}>
-            Continuar no workspace atual
-          </button>
-          <button
-            className="v2-primary"
-            type="submit"
-            disabled={state === "validating" || code.trim() === ""}
-          >
-            {state === "validating" ? "Validando…" : "Ativar licença"}
-          </button>
-        </div>
-      </form>
     </div>
   );
 }

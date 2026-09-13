@@ -231,7 +231,7 @@ export interface V2IpcServices {
   readonly files: FileSystemService;
   readonly git: GitService;
   readonly portals: PortalRuntimeManager;
-  readonly entitlement: EntitlementService;
+  readonly entitlement: Pick<EntitlementService, "status" | "activate" | "deactivate">;
   readonly updates: UpdateService;
   readonly orchestrator?: V2OrchestratorBridge;
   readonly chooseDirectory: () => Promise<string | null>;

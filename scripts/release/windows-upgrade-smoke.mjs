@@ -21,7 +21,7 @@ const executable = join(installationDirectory, "Compazio.exe");
 
 try {
   await download(
-    `https://github.com/gabriel-r-machado/compazio-releases/releases/download/v${oldVersion}/Compazio-Setup-${oldVersion}.exe`,
+    `https://github.com/gabriel-r-machado/compazio/releases/download/v${oldVersion}/Compazio-Setup-${oldVersion}.exe`,
     oldInstaller
   );
   await writeFile(preservedData, "preserve-me\n", "utf8");
@@ -42,7 +42,7 @@ try {
     }
   );
 
-  const uninstaller = join(installationDirectory, "Uninstall Compazio.exe");
+  const uninstaller = join(installationDirectory, "Uninstall Compazio Community.exe");
   if (!existsSync(uninstaller)) throw new Error("NSIS uninstaller was not found");
   await run("uninstall", uninstaller, ["/S", `_?=${installationDirectory}`]);
   if (existsSync(executable)) throw new Error("Uninstall left the executable behind");

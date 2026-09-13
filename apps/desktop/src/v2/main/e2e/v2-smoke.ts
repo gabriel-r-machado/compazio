@@ -390,9 +390,9 @@ export async function runV2ElectronSmoke(window: BrowserWindow): Promise<void> {
       !isFreeLicenseResult(result) ||
       !result.workspaceDialogOpened ||
       !result.firstCreated ||
-      !result.secondDenied ||
-      !result.licenseDialogOpened ||
-      result.workspaceCount !== 1
+      !result.secondCreated ||
+      result.licenseDialogOpened ||
+      result.workspaceCount !== 2
     ) {
       throw new Error(
         `V2 Electron free-license acceptance assertion failed: ${JSON.stringify(result)}`
@@ -1049,15 +1049,15 @@ function rendererScenario(input: {
       }
       const firstCreated = (await window.compazioV2.workspace.list()).workspaces.length === 1;
       await createThroughDialog("Workspace gratuito B");
-      await waitFor(
-        () => document.querySelector("#v2-license-title") !== null,
-        "license dialog after free workspace limit"
-      );
+      for (let attempt = 0; attempt < 80; attempt += 1) {
+        if ((await window.compazioV2.workspace.list()).workspaces.length === 2) break;
+        await pause(25);
+      }
       const listing = await window.compazioV2.workspace.list();
       return {
         workspaceDialogOpened: true,
         firstCreated,
-        secondDenied: listing.workspaces.length === 1,
+        secondCreated: listing.workspaces.length === 2,
         licenseDialogOpened: document.querySelector("#v2-license-title") !== null,
         workspaceCount: listing.workspaces.length
       };
@@ -1090,12 +1090,12 @@ function rendererScenario(input: {
       }
       const listing = await window.compazioV2.workspace.list();
       return {
-        beforeFree: before.plan === "free" && before.maxWorkspaces === 1,
-        activated: activated.plan === "beta_unlimited" && activated.maxWorkspaces === null,
+        beforeFree: before.plan === "free" && before.maxWorkspaces === null,
+        activated: activated.plan === "free" && activated.maxWorkspaces === null,
         existingPreserved:
           listing.workspaces.some((workspace) => workspace.id === first.id) &&
           listing.workspaces.some((workspace) => workspace.id === second.id),
-        revoked: revoked.plan === "free" && revoked.maxWorkspaces === 1,
+        revoked: revoked.plan === "free" && revoked.maxWorkspaces === null,
         denied
       };
     }
@@ -4250,7 +4250,7 @@ function isPosition(value: unknown): value is { readonly x: number; readonly y: 
 function isFreeLicenseResult(value: unknown): value is {
   readonly workspaceDialogOpened: boolean;
   readonly firstCreated: boolean;
-  readonly secondDenied: boolean;
+  readonly secondCreated: boolean;
   readonly licenseDialogOpened: boolean;
   readonly workspaceCount: number;
 } {
@@ -4259,12 +4259,12 @@ function isFreeLicenseResult(value: unknown): value is {
     value !== null &&
     "workspaceDialogOpened" in value &&
     "firstCreated" in value &&
-    "secondDenied" in value &&
+    "secondCreated" in value &&
     "licenseDialogOpened" in value &&
     "workspaceCount" in value &&
     typeof value.workspaceDialogOpened === "boolean" &&
     typeof value.firstCreated === "boolean" &&
-    typeof value.secondDenied === "boolean" &&
+    typeof value.secondCreated === "boolean" &&
     typeof value.licenseDialogOpened === "boolean" &&
     typeof value.workspaceCount === "number"
   );
@@ -4289,7 +4289,7 @@ function isLicenseCycleResult(value: unknown): value is {
     value.activated === true &&
     value.existingPreserved === true &&
     value.revoked === true &&
-    value.denied === true
+    value.denied === false
   );
 }
 
