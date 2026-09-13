@@ -14,6 +14,6 @@
     "@forgedeck/compazio-v2-domain": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "22.20.1"
+    "@types/node": "22.20.2"
   }
 }
