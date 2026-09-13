@@ -25,7 +25,7 @@ try {
       COMPAZIO_V2_PACKAGED_EXECUTABLE: executable
     }
   );
-  const uninstaller = join(installationDirectory, "Uninstall Compazio.exe");
+  const uninstaller = join(installationDirectory, "Uninstall Compazio Community.exe");
   if (!existsSync(uninstaller)) throw new Error("NSIS uninstaller was not found.");
   await run("NSIS uninstall", uninstaller, ["/S", `_?=${installationDirectory}`]);
   if (existsSync(executable))

@@ -98,7 +98,6 @@ A decisão arquitetural completa está no ADR 048.
 - Workspace schema 10 preserva campos históricos, mas o runtime manual não deriva comportamento de
   ownership ou execução gerenciada.
 
-## Homologação
+## Desenvolvimento e testes
 
-Consulte `docs/COMPAZIO_CORE_RESCUE_ACCEPTANCE.md` para a matriz executada e os itens que ainda
-dependem de prova manual/real no Windows.
+Consulte o [guia de desenvolvimento](development.md). A edição comunitária não exige ativação e permite workspaces ilimitados.

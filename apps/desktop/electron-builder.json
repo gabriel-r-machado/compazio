@@ -1,13 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/electron-builder",
-  "appId": "com.compazio.desktop",
-  "productName": "Compazio",
+  "appId": "com.compazio.community",
+  "productName": "Compazio Community",
   "copyright": "Copyright © 2026 Compazio",
   "publish": [
     {
       "provider": "github",
       "owner": "gabriel-r-machado",
-      "repo": "compazio-releases",
+      "repo": "compazio",
       "channel": "beta",
       "releaseType": "prerelease"
     }
@@ -64,7 +64,7 @@
     "allowToChangeInstallationDirectory": true,
     "createDesktopShortcut": true,
     "createStartMenuShortcut": true,
-    "shortcutName": "Compazio",
+    "shortcutName": "Compazio Community",
     "runAfterFinish": false
   },
   "mac": {

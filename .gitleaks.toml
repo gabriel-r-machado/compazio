@@ -1,0 +1,26 @@
+title = "Compazio secret scanning"
+
+[extend]
+useDefault = true
+
+# Exact synthetic fixtures only; test files remain scanned for other secrets.
+[[allowlists]]
+description = "Synthetic redaction fixtures"
+condition = "AND"
+paths = ['''^(apps/desktop/src/main/codex-agent-adapter\.test\.ts|packages/logger/src/redact\.test\.ts)$''']
+regexTarget = "secret"
+regexes = ['''^(sk-abcdef123456|sk_1234567890abcdef)$''']
+
+[[allowlists]]
+description = "Synthetic JWT used to verify console redaction"
+condition = "AND"
+paths = ['''^apps/desktop/src/v2/main/portal-console-buffer\.test\.ts$''']
+regexTarget = "secret"
+regexes = ['''^eyJhbGciOiJIUzI1NiJ9\.eyJzdWIiOiIxMjM0NTY3ODkwIn0\.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U$''']
+
+[[allowlists]]
+description = "Idempotency keys in coordination fixtures, not credentials"
+condition = "AND"
+paths = ['''^apps/desktop/src/v2/main/(team-coordinator|team-hierarchy-domain\.release-gate)\.integration\.test\.ts$''']
+regexTarget = "secret"
+regexes = ['''^(hier-spawn-fail|hier-revoked-denial|hier-completion-result|claude-fixture-ack|claude-fixture-result|implementation-result)-0001$''']

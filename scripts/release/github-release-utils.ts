@@ -1,5 +1,5 @@
 export const githubReleaseOwner = "gabriel-r-machado";
-export const githubReleaseRepository = `${githubReleaseOwner}/compazio-releases`;
+export const githubReleaseRepository = `${githubReleaseOwner}/compazio`;
 
 export function githubReleaseTag(version: string): string {
   if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.test(version))

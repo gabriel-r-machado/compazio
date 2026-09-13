@@ -6,11 +6,11 @@ Security issues are treated separately from ordinary bugs because Compazio execu
 
 Security fixes are prioritized for the latest published beta/release line. Older betas may receive a fix only when the same issue materially affects current users.
 
-| Version | Supported |
-| --- | --- |
-| Latest beta/release | Yes |
-| Older beta/release lines | Best effort |
-| Unreleased historical branches | No |
+| Version                        | Supported   |
+| ------------------------------ | ----------- |
+| Latest beta/release            | Yes         |
+| Older beta/release lines       | Best effort |
+| Unreleased historical branches | No          |
 
 ## Reporting a vulnerability
 

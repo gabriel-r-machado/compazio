@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 
-import { app, BrowserWindow, dialog, ipcMain, Notification, safeStorage, session } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, Notification, session } from "electron";
 
 import { V2WorkspaceRepository } from "@forgedeck/compazio-v2-persistence";
 import {
@@ -42,9 +42,9 @@ import { createSafeV2Diagnostics } from "./diagnostics";
 import { FileSystemService } from "./file-system-service";
 import { GitService } from "./git-service";
 import { PortalRuntimeManager } from "./portal-runtime-manager";
-import { EntitlementService, resolveTestHarnessId } from "./entitlement-service";
-import { EMBEDDED_LICENSE_PUBLIC_KEY_PEM } from "./license-public-key";
+import { CommunityEntitlementService } from "./community-entitlement-service";
 import { UpdateService } from "./update-service";
+import { trustedRendererIpc } from "../../main/trusted-renderer-ipc";
 
 const currentDirectory = fileURLToPath(new URL(".", import.meta.url));
 let workspaceService: V2WorkspaceService | null = null;
@@ -59,8 +59,8 @@ let shutdownStarted = false;
 
 // The isolated V2 entrypoint must retain the installed product identity even when Electron is
 // launched outside electron-builder (development, smoke and diagnostics).
-app.setName("Compazio");
-app.setAppUserModelId("com.compazio.desktop");
+app.setName("Compazio Community");
+app.setAppUserModelId("com.compazio.community");
 
 /**
  * Two processes writing the same user data is the one concurrency the per-path lock cannot cover:
@@ -202,35 +202,7 @@ void app
       .catch((error: unknown) => {
         console.warn("Compazio V2 não conseguiu limpar temporários abandonados", error);
       });
-    // An isolated harness may lift the free limit only when every condition in resolveTestHarnessId
-    // holds at once. A normal dev run, an installed build and a manually unpacked build all fail it.
-    const harnessId = await resolveTestHarnessId({
-      environment: process.env,
-      stateDirectory: storageRoot,
-      packaged: app.isPackaged
-    });
-    const entitlementOptions = {
-      statePath: join(storageRoot, "license", "entitlement.json"),
-      appVersion: app.getVersion(),
-      supabaseUrl: process.env.COMPAZIO_SUPABASE_URL,
-      supabasePublishableKey: process.env.COMPAZIO_SUPABASE_PUBLISHABLE_KEY,
-      allowInsecureLocalTestEndpoint: process.env.COMPAZIO_V2_SMOKE === "true",
-      publicKeyPem: process.env.COMPAZIO_LICENSE_PUBLIC_KEY ?? EMBEDDED_LICENSE_PUBLIC_KEY_PEM,
-      storage: {
-        encrypt: (value) => {
-          if (!safeStorage.isEncryptionAvailable()) return value;
-          return safeStorage.encryptString(value).toString("base64url");
-        },
-        decrypt: (value) => {
-          if (!safeStorage.isEncryptionAvailable()) return value;
-          return safeStorage.decryptString(Buffer.from(value, "base64url"));
-        }
-      }
-    };
-    const entitlement =
-      harnessId === null
-        ? new EntitlementService(entitlementOptions)
-        : EntitlementService.forIsolatedTest({ ...entitlementOptions, harnessId });
+    const entitlement = new CommunityEntitlementService();
     const agents = new AgentRuntime({
       store: repository,
       roleInjection: new RoleInjectionService(join(storageRoot, "role-sessions")),
@@ -243,9 +215,6 @@ void app
       entitlement,
       notesAsMarkdown: true
     });
-    // Refresh at most once per day; transient network failures preserve a valid offline
-    // entitlement and explicit revocation responses clear it in the main process.
-    void entitlement.refresh().catch(() => undefined);
     const operations = new V2OperationalService({
       repository,
       workspaces: workspaceService,
@@ -369,85 +338,88 @@ void app
       canInstall: () => supervisor.diagnostics().activeSessionCount === 0
     });
     updateService.initialize();
-    registerV2Ipc(ipcMain, {
-      workspaces: workspaceService,
-      agents,
-      operations,
-      files: fileSystemService,
-      git,
-      portals: portalRuntimeManager,
-      entitlement,
-      updates: updateService,
-      orchestrator: orchestratorBridge,
-      chooseDirectory: async () => {
-        // The Electron acceptance harness cannot automate the native chooser. It may only supply
-        // its own temporary fixture directory, and only while the explicit smoke phase is active.
-        // Production never reads this branch.
-        if (process.env.COMPAZIO_V2_SMOKE === "true")
-          return process.env.COMPAZIO_V2_SMOKE_WORKSPACE ?? null;
-        if (process.env.COMPAZIO_FINAL_PRODUCT_JOURNEY === "true")
-          return process.env.COMPAZIO_FINAL_PROJECT_DIRECTORY ?? null;
-        const result = await dialog.showOpenDialog({
-          properties: ["openDirectory", "createDirectory"]
-        });
-        return result.canceled ? null : (result.filePaths[0] ?? null);
-      },
-      // O seletor do sistema é a autorização: quem escolhe o arquivo é a pessoa, no explorador dela.
-      chooseFiles: async (defaultPath: string) => {
-        const result = await dialog.showOpenDialog({
-          title: "Trazer arquivos para o canvas",
-          defaultPath,
-          properties: ["openFile", "multiSelections"],
-          filters: [
-            {
-              name: "Documentos, imagens e mídia",
-              extensions: [
-                "md",
-                "markdown",
-                "txt",
-                "json",
-                "yml",
-                "yaml",
-                "csv",
-                "log",
-                "png",
-                "jpg",
-                "jpeg",
-                "webp",
-                "gif",
-                "svg",
-                "pdf",
-                "mp4",
-                "webm",
-                "mov"
-              ]
-            },
-            { name: "Todos os arquivos", extensions: ["*"] }
-          ]
-        });
-        return result.canceled ? [] : result.filePaths;
-      },
-      exportDiagnostics: async (workspaceId) => {
-        if (orchestratorBridge === null || workspaceService === null) return null;
-        const result = await dialog.showSaveDialog({
-          title: "Exportar diagnóstico do Compazio",
-          defaultPath: `compazio-diagnostico-${new Date().toISOString().slice(0, 10)}.json`,
-          filters: [{ name: "JSON", extensions: ["json"] }]
-        });
-        const path = result.filePath;
-        if (result.canceled || path === undefined) return null;
-        const contents = await createSafeV2Diagnostics(workspaceId, {
-          version: app.getVersion(),
-          workspaces: workspaceService,
-          operations,
-          agents,
-          supervisor,
-          bridge: orchestratorBridge
-        });
-        await writeFile(path, contents, "utf8");
-        return path;
+    registerV2Ipc(
+      trustedRendererIpc(ipcMain, () => mainWindow?.webContents ?? null),
+      {
+        workspaces: workspaceService,
+        agents,
+        operations,
+        files: fileSystemService,
+        git,
+        portals: portalRuntimeManager,
+        entitlement,
+        updates: updateService,
+        orchestrator: orchestratorBridge,
+        chooseDirectory: async () => {
+          // The Electron acceptance harness cannot automate the native chooser. It may only supply
+          // its own temporary fixture directory, and only while the explicit smoke phase is active.
+          // Production never reads this branch.
+          if (process.env.COMPAZIO_V2_SMOKE === "true")
+            return process.env.COMPAZIO_V2_SMOKE_WORKSPACE ?? null;
+          if (process.env.COMPAZIO_FINAL_PRODUCT_JOURNEY === "true")
+            return process.env.COMPAZIO_FINAL_PROJECT_DIRECTORY ?? null;
+          const result = await dialog.showOpenDialog({
+            properties: ["openDirectory", "createDirectory"]
+          });
+          return result.canceled ? null : (result.filePaths[0] ?? null);
+        },
+        // O seletor do sistema é a autorização: quem escolhe o arquivo é a pessoa, no explorador dela.
+        chooseFiles: async (defaultPath: string) => {
+          const result = await dialog.showOpenDialog({
+            title: "Trazer arquivos para o canvas",
+            defaultPath,
+            properties: ["openFile", "multiSelections"],
+            filters: [
+              {
+                name: "Documentos, imagens e mídia",
+                extensions: [
+                  "md",
+                  "markdown",
+                  "txt",
+                  "json",
+                  "yml",
+                  "yaml",
+                  "csv",
+                  "log",
+                  "png",
+                  "jpg",
+                  "jpeg",
+                  "webp",
+                  "gif",
+                  "svg",
+                  "pdf",
+                  "mp4",
+                  "webm",
+                  "mov"
+                ]
+              },
+              { name: "Todos os arquivos", extensions: ["*"] }
+            ]
+          });
+          return result.canceled ? [] : result.filePaths;
+        },
+        exportDiagnostics: async (workspaceId) => {
+          if (orchestratorBridge === null || workspaceService === null) return null;
+          const result = await dialog.showSaveDialog({
+            title: "Exportar diagnóstico do Compazio",
+            defaultPath: `compazio-diagnostico-${new Date().toISOString().slice(0, 10)}.json`,
+            filters: [{ name: "JSON", extensions: ["json"] }]
+          });
+          const path = result.filePath;
+          if (result.canceled || path === undefined) return null;
+          const contents = await createSafeV2Diagnostics(workspaceId, {
+            version: app.getVersion(),
+            workspaces: workspaceService,
+            operations,
+            agents,
+            supervisor,
+            bridge: orchestratorBridge
+          });
+          await writeFile(path, contents, "utf8");
+          return path;
+        }
       }
-    });
+    );
     releaseTerminalEvents = publishV2TerminalEvents(workspaceService);
     releaseOperationalEvents = publishV2OperationalEvents(operations);
     installContentSecurityPolicy();

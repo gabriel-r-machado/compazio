@@ -48,3 +48,12 @@ out-e2e/
 /artifacts/
 /apps/desktop/artifacts/
 *.exit
+
+# Private local state and signing material
+.compazio/
+.codex/
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks

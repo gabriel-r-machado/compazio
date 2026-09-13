@@ -1,9 +1,10 @@
-import { existsSync, renameSync, watch } from "node:fs";
+import { existsSync, watch } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { basename, dirname, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { app, BrowserWindow, dialog, ipcMain, session } from "electron";
+import { trustedRendererIpc } from "./trusted-renderer-ipc";
 
 import {
   AdapterRegistry,
@@ -217,42 +218,18 @@ if (isSmokeTest) {
   app.setPath("userData", smokeUserData);
 }
 
-app.setName("Compazio");
-app.setAppUserModelId("com.compazio.desktop");
-migrateLegacyUserData();
+app.setName("Compazio Community Legacy");
+app.setAppUserModelId("com.compazio.community.legacy");
+if (!isSmokeTest)
+  app.setPath("userData", join(app.getPath("appData"), "Compazio Community Legacy"));
 
 const isPrimaryInstance = app.requestSingleInstanceLock();
 if (!isPrimaryInstance) {
   app.quit();
 }
 
-/**
- * One-time rename of the local-first data folder. It runs before Electron opens the database and never
- * overwrites a Compazio folder: if the destination already exists, the older folder is left untouched
- * for a person to inspect rather than risking a merge of two databases.
- */
-function migrateLegacyUserData(): void {
-  if (isSmokeTest) return;
-  const appData = app.getPath("appData");
-  const destination = join(appData, "Compazio");
-  if (existsSync(destination)) {
-    app.setPath("userData", destination);
-    return;
-  }
-  for (const source of [join(appData, "Compasso"), join(appData, "@forgedeck", "desktop")]) {
-    if (!existsSync(source)) continue;
-    try {
-      renameSync(source, destination);
-      app.setPath("userData", destination);
-    } catch {
-      // The existing location remains valid when a different process has a lock. We never copy or
-      // delete user data in that case; the next clean launch retries this one-time migration.
-      app.setPath("userData", source);
-    }
-    return;
-  }
-  app.setPath("userData", destination);
-}
+let trustedMainWindow: BrowserWindow | null = null;
+const privilegedIpc = trustedRendererIpc(ipcMain, () => trustedMainWindow?.webContents ?? null);
 
 function createMainWindow(): BrowserWindow {
   const window = new BrowserWindow({
@@ -276,6 +253,10 @@ function createMainWindow(): BrowserWindow {
     }
   });
 
+  trustedMainWindow = window;
+  window.once("closed", () => {
+    if (trustedMainWindow === window) trustedMainWindow = null;
+  });
   window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   window.webContents.on("will-navigate", (event) => event.preventDefault());
   if (isSmokeTest) {
@@ -1616,7 +1597,7 @@ function observeWorkspaceDatabase(filename: string, onChange: () => void): () =>
   }
 }
 
-registerSystemIpc(ipcMain);
+registerSystemIpc(privilegedIpc);
 
 if (isPrimaryInstance)
   void app
@@ -1959,7 +1940,7 @@ if (isPrimaryInstance)
         checkRunner: automaticCheckRunnerFor(""),
         checkRunnerFor: automaticCheckRunnerFor
       });
-      releaseAutomaticIpc = registerAutomaticIpc(ipcMain, automaticModeService);
+      releaseAutomaticIpc = registerAutomaticIpc(privilegedIpc, automaticModeService);
       const workflowRunDispatcher = new WorkflowRunCommandDispatcher(
         activeWorkflowRunCommandStore,
         workflowRuntime,
@@ -2008,12 +1989,12 @@ if (isPrimaryInstance)
         qualityGates,
         conflicts
       );
-      registerCanvasIpc(ipcMain, canvasRepository);
+      registerCanvasIpc(privilegedIpc, canvasRepository);
       // Assigned once the terminal services exist (below). Approval may only fire after the UI is up,
       // so this forward reference is always populated by the time a worker is dispatched.
       let activationCoordinator: ActivationCoordinator | null = null;
       let activeApprovedDraft: WorkflowDraft | null = null;
-      registerWorkflowDraftIpc(ipcMain, workflowDraftStore, {
+      registerWorkflowDraftIpc(privilegedIpc, workflowDraftStore, {
         inspectAdapters: inspectRuntimeAdapters,
         // Live agent catalog for the per-node selector and the assignment presets.
         agents: async () => ({ descriptors: await agentDescriptors.refresh() }),
@@ -2038,9 +2019,9 @@ if (isPrimaryInstance)
           });
         }
       );
-      registerAgentMessageIpc(ipcMain, agentMessageStore);
+      registerAgentMessageIpc(privilegedIpc, agentMessageStore);
       registerHandoffIpc(
-        ipcMain,
+        privilegedIpc,
         new HandoffService({
           store: canvasHandoffRepository,
           canvases: canvasRepository,
@@ -2051,10 +2032,10 @@ if (isPrimaryInstance)
           policy: policyEngine
         })
       );
-      registerWorkspaceIpc(ipcMain, workspaceRepository);
-      registerWorkspaceIncidentIpc(ipcMain, workspaceIncidentStore);
+      registerWorkspaceIpc(privilegedIpc, workspaceRepository);
+      registerWorkspaceIncidentIpc(privilegedIpc, workspaceIncidentStore);
       registerOrchestrationProposalIpc(
-        ipcMain,
+        privilegedIpc,
         orchestrationProposalStore,
         new OrchestrationProposalExecutionService(
           orchestrationProposalStore,
@@ -2064,9 +2045,9 @@ if (isPrimaryInstance)
         ),
         agentMessageStore
       );
-      registerSettingsIpc(ipcMain, appSettingsRepository);
-      registerCloudSyncIpc(ipcMain, cloudSync);
-      registerWorkflowIpc(ipcMain, workflowRuntime, {
+      registerSettingsIpc(privilegedIpc, appSettingsRepository);
+      registerCloudSyncIpc(privilegedIpc, cloudSync);
+      registerWorkflowIpc(privilegedIpc, workflowRuntime, {
         requestStart: (input) => {
           const command = activeWorkflowRunCommandStore.requestStart(input);
           return {
@@ -2086,7 +2067,7 @@ if (isPrimaryInstance)
           };
         }
       });
-      registerGitIpc(ipcMain, {
+      registerGitIpc(privilegedIpc, {
         projects,
         worktrees,
         diffs,
@@ -2154,7 +2135,7 @@ if (isPrimaryInstance)
             })
           ).response === 1
       });
-      registerRuntimeIpc(ipcMain, {
+      registerRuntimeIpc(privilegedIpc, {
         interruptedSessionsRecovered,
         interruptedRunsRecovered,
         interruptedWorktreeLeasesRecovered,
@@ -2361,7 +2342,7 @@ if (isPrimaryInstance)
           }
         }
       } as const;
-      registerTerminalIpc(ipcMain, terminalServices);
+      registerTerminalIpc(privilegedIpc, terminalServices);
       if (orchestratorDraftDriver !== null) {
         liveOrchestratorSessionService = new OrchestratorSessionService({
           launcher: {
@@ -2418,7 +2399,7 @@ if (isPrimaryInstance)
         liveOrchestratorSessionService.onWorkflowDraft((sessionId, draft) =>
           orchestratorDraftDriver.acceptDraft(sessionId, draft)
         );
-        registerOrchestratorSessionIpc(ipcMain, {
+        registerOrchestratorSessionIpc(privilegedIpc, {
           service: liveOrchestratorSessionService,
           driver: orchestratorDraftDriver,
           publishComposition: (composition) => {
