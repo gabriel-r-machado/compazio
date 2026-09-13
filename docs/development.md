@@ -42,10 +42,18 @@ and macOS, and native/integration checks on Windows. Tests with `real-agents` or
 `e2e-local` in their name launch installed providers and may use account credits;
 run them only when you intend to use those accounts.
 
-The optional web app starts with `pnpm dev:web`. Its environment variables are
-documented in `.env.example`; privileged keys belong only in server environments.
-Local database policy tests require Docker and `pnpm exec supabase start`, followed
-by `pnpm exec supabase test db --local supabase/tests/database`.
+## Optional web and cloud services
+
+The community desktop does not need an environment file. The optional web app
+starts with `pnpm dev:web`; copy `apps/web/.env.example` to
+`apps/web/.env.local` only when working on that app. Keep privileged values on
+the server and never expose them through `NEXT_PUBLIC_*` variables.
+
+Supabase services are also optional for local desktop development. Environment
+variables used by the compatibility functions are documented in
+`supabase/.env.example`. Local database policy tests require Docker and
+`pnpm exec supabase start`, followed by
+`pnpm exec supabase test db --local supabase/tests/database`.
 
 ## Packaging
 

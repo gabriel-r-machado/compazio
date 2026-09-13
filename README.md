@@ -8,8 +8,8 @@ This is the community edition: run it locally, change the code and create as man
 workspaces as you need. No account, activation code or subscription is required.
 Agent CLIs use your existing installations and provider accounts.
 
-[Product website](https://www.compazio.app/) · [Contributing](CONTRIBUTING.md) ·
-[Security](SECURITY.md)
+[Product website](https://www.compazio.app/) · [Documentation](docs/README.md) ·
+[Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
 ## Run locally
 
@@ -37,10 +37,10 @@ are internal names retained for compatibility.
 - Give a visible agent permission to coordinate a small team.
 - Inspect Git changes and keep workspace state on disk with recovery backups.
 
-See [capabilities](docs/23-current-capabilities.md) for the local CLI and limits.
-Agents and shell commands run with your operating-system permissions. Canvas
-connections govern the Compazio broker; they do not sandbox a CLI's filesystem
-or network access.
+See [capabilities](docs/capabilities.md) for the local CLI and limits. Agents and
+shell commands run with your operating-system permissions. Canvas connections
+govern the Compazio broker; they do not sandbox a CLI's filesystem or network
+access.
 
 ## Development
 

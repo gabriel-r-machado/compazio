@@ -35,8 +35,8 @@ Untrusted projects and pages can contain malicious instructions; connecting an
 agent to their content is a deliberate trust decision.
 
 File services validate workspace containment, including symlinks and junctions;
-see [filesystem security](V2_FILE_SYSTEM_SECURITY.md). Remote pages run in isolated
-Electron sessions; see [Portal security](V2_PORTAL_SECURITY.md).
+see [filesystem security](filesystem-security.md). Remote pages run in isolated
+Electron sessions; see [Portal security](portal-security.md).
 
 The community entitlement service always permits local workspace creation and
 does not read commercial activation state or contact a licensing server. The
