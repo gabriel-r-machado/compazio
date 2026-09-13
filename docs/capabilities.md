@@ -26,13 +26,13 @@ coordination code may remain for compatibility, but it does not define the defau
 
 A connection is an explicit capability grant:
 
-| Pair                | Default capabilities                                    |
-| ------------------- | ------------------------------------------------------- |
-| terminal ↔ terminal | Bidirectional messages and shared context               |
-| terminal → note     | Read, replace, append and share context                 |
-| note ↔ note         | Context chaining                                        |
-| terminal → Portal   | Read, control, screenshot and context, all explicit    |
-| terminal → file     | Context sharing without implicit execution              |
+| Pair                | Default capabilities                                |
+| ------------------- | --------------------------------------------------- |
+| terminal ↔ terminal | Bidirectional messages and shared context           |
+| terminal → note     | Read, replace, append and share context             |
+| note ↔ note         | Context chaining                                    |
+| terminal → Portal   | Read, control, screenshot and context, all explicit |
+| terminal → file     | Context sharing without implicit execution          |
 
 Each Claude Code, Codex or OpenCode session receives an ephemeral token and a private `compazio` CLI:
 

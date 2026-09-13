@@ -13,7 +13,6 @@ permissions:
 
 jobs:
   analyze:
-    if: ${{ github.event.repository.private == false }}
     name: Analyze JavaScript and TypeScript
     runs-on: ubuntu-latest
     timeout-minutes: 30
