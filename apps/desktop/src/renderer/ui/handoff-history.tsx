@@ -1,3 +1,5 @@
+import { flushSync } from "react-dom";
+
 import type { CanvasHandoff } from "@forgedeck/schemas";
 
 import { Icon } from "./icons";
@@ -53,7 +55,12 @@ export function HandoffHistoryPanel({
         <ol>
           {handoffs.map((handoff) => (
             <li key={handoff.id}>
-              <button type="button" onClick={() => onReview(handoff)}>
+              <button
+                type="button"
+                onClick={() => {
+                  flushSync(() => onReview(handoff));
+                }}
+              >
                 <span className={`handoff-status is-${handoff.status}`}>
                   {t(handoffStatusTranslationKey(handoff))}
                 </span>
