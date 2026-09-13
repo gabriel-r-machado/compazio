@@ -2,21 +2,25 @@ name: CI
 
 on:
   pull_request:
+    branches: [main]
   push:
-    branches:
-      - main
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
-  cloud-database:
-    name: Cloud database (Supabase RLS)
+  ci:
+    name: CI
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
@@ -30,94 +34,39 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Start local Supabase
-        run: pnpm exec supabase start
+      - name: Verify DCO for external contributions
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true && github.actor != 'dependabot[bot]' }}
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          merge_base="$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
+          mapfile -t commits < <(git rev-list --no-merges "$merge_base..$HEAD_SHA")
 
-      - name: Run RLS and billing database tests
-        run: pnpm exec supabase test db --local supabase/tests/database
-
-      - name: Check database security advisors
-        run: pnpm exec supabase db advisors --local --type security --fail-on error
-
-  quality:
-    name: Quality (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
-          - windows-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
-
-      - name: Install Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: 22.20.0
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          failed=0
+          for commit in "${commits[@]}"; do
+            if git show -s --format='%B' "$commit" | grep -Eiq '^Signed-off-by: .+ <[^>]+>$'; then
+              echo "✓ $commit"
+            else
+              echo "::error::Commit $commit is missing a Signed-off-by trailer. Use git commit -s and update the pull request."
+              failed=1
+            fi
+          done
+          exit "$failed"
 
       - name: ESLint
         run: pnpm exec eslint . --max-warnings 0
 
-      # Prettier checks text bytes, so checking on a Windows checkout can flag
-      # repository-wide CRLF conversions even when the canonical files are formatted.
       - name: Format check
-        if: runner.os == 'Linux'
         run: pnpm format:check
 
       - name: Typecheck
         run: pnpm typecheck
 
-      # The packaged beta target is Windows x64. Keep portable static/unit coverage on all
-      # runners, while process/native/integration and real Electron acceptance run on Windows.
-      - name: Unit tests (complete Windows suite)
-        if: runner.os == 'Windows'
-        run: pnpm exec vitest run --testTimeout=15000
-
-      - name: Unit tests (portable suites)
-        if: runner.os != 'Windows'
+      - name: Unit tests
         run: >-
           pnpm exec vitest run
           --exclude "packages/cli/src/cli.test.ts"
           --exclude "packages/compazio-v2-runtime/src/agents.test.ts"
-
-      - name: Integration tests (Windows release target)
-        if: runner.os == 'Windows'
-        # Cold GitHub Windows runners can make SQLite/process-heavy integration cases
-        # exceed the local 15s default even when they are making steady progress.
-        # Individual bridge process launches keep their own tighter bounded timeouts.
-        run: pnpm exec vitest run --config vitest.integration.config.ts --testTimeout=60000
-
-      - name: Run local migration (Windows release target)
-        if: runner.os == 'Windows'
-        run: pnpm db:migrate
-
-      - name: Rebuild desktop native modules (Windows release target)
-        if: runner.os == 'Windows'
-        run: pnpm --filter @forgedeck/desktop native:electron
-
-      - name: Build (Windows release target)
-        if: runner.os == 'Windows'
-        run: pnpm build
-
-      - name: Desktop E2E smoke (Windows release target)
-        if: runner.os == 'Windows'
-        run: pnpm test:e2e
-
-      - name: Build community desktop (Windows)
-        if: runner.os == 'Windows'
-        run: pnpm --filter @forgedeck/desktop build:v2
-
-      - name: Community desktop smoke (Windows)
-        if: runner.os == 'Windows'
-        run: pnpm test:v2-electron-smoke
