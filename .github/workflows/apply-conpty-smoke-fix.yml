@@ -22,6 +22,7 @@ jobs:
       - name: Patch smoke harness
         shell: bash
         run: |
+          # This workflow exists only on the temporary fix branch and is removed before merging.
           python - <<'PY'
           from pathlib import Path
 
