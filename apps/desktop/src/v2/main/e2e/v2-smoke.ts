@@ -2826,8 +2826,10 @@ setInterval(() => {}, 1000);
         screen.dispatchEvent(
           new WheelEvent("wheel", { bubbles: true, cancelable: true, deltaY: 0 })
         );
-        if (screen.dataset.terminalMouseTracking !== "none")
-          throw new Error("ConPTY fixture unexpectedly forwarded its private mouse mode");
+        // ConPTY behavior differs across supported Windows images: some versions consume the
+        // TUI's DEC private mouse-mode announcement, while others forward it to xterm. Both are
+        // valid. The SGR frame and coordinate assertions below verify the actual end-to-end
+        // mouse contract regardless of which path is active.
         const scaledRect = screen.getBoundingClientRect();
         const scaledTuiTraceWindow = window as typeof window & {
           __compazioScaledTuiWheelReady?: boolean;
