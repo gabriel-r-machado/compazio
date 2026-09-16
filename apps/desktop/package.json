@@ -94,15 +94,15 @@
   },
   "devDependencies": {
     "@electron/rebuild": "4.2.0",
-    "@swc/core": "1.15.43",
+    "@swc/core": "1.16.2",
     "@types/better-sqlite3": "7.6.13",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
-    "@vitejs/plugin-react": "5.2.0",
-    "electron": "43.7.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "electron": "44.3.0",
     "electron-builder": "26.15.3",
     "electron-vite": "5.0.0",
-    "vite": "7.3.6"
+    "vite": "8.3.0"
   },
   "build": {
     "appId": "com.compazio.community",
