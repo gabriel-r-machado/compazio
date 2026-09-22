@@ -20,7 +20,13 @@
   "scripts": {
     "brand:icons": "node scripts/brand/build-windows-icon.mjs",
     "build": "turbo run build",
+    "package:linux": "pnpm --filter @forgedeck/desktop package:linux",
+    "package:linux:appimage": "pnpm --filter @forgedeck/desktop package:linux:appimage",
+    "package:linux:rpm": "pnpm --filter @forgedeck/desktop package:linux:rpm",
+    "package:linux:pacman": "pnpm --filter @forgedeck/desktop package:linux:pacman",
+    "package:linux:deb": "pnpm --filter @forgedeck/desktop package:linux:deb",
     "release:windows:beta": "node scripts/release/windows-beta.mjs",
+    "release:linux:beta": "node scripts/release/linux-beta.mjs",
     "release:windows:github": "tsx scripts/release/publish-github.ts",
     "release:windows:upload": "pnpm release:windows:github",
     "dev": "turbo run dev --parallel",

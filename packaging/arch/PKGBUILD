@@ -1,0 +1,69 @@
+# Maintainer: Compazio Community <support@compazio.dev>
+# Contributor: Gabriel Machado <gabriel@compazio.dev>
+
+pkgname=compazio-bin
+pkgver=0.2.0-beta.1
+pkgrel=1
+pkgdesc="Orquestração visual de agentes e terminais"
+arch=('x86_64')
+url="https://www.compazio.app"
+license=('AGPL-3.0-only')
+depends=(
+  'alsa-lib'
+  'gtk3'
+  'libnotify'
+  'nss'
+  'libsecret'
+  'libxss'
+  'libxtst'
+  'xdg-utils'
+  'fuse2'
+)
+optdepends=(
+  'git: Controle de versão integrado'
+)
+provides=('compazio')
+conflicts=('compazio')
+options=('!strip')
+
+source=(
+  "Compazio-${pkgver}-x64.AppImage::https://github.com/gabriel-r-machado/compazio/releases/download/v${pkgver}/Compazio-${pkgver}-x64.AppImage"
+  "compazio.desktop"
+)
+sha256sums=(
+  'SKIP'
+  '6d27e4b2079926f1133d3e5e946a973c574b9a5ece2c171a12c3a237a5c9b7ad'
+)
+
+prepare() {
+  chmod +x "Compazio-${pkgver}-x64.AppImage"
+  ./Compazio-${pkgver}-x64.AppImage --appimage-extract
+}
+
+package() {
+  install -d "${pkgdir}/opt/compazio"
+  cp -r "${srcdir}/squashfs-root/"* "${pkgdir}/opt/compazio/"
+
+  # Ajustar permissões
+  chmod 4755 "${pkgdir}/opt/compazio/chrome-sandbox" 2>/dev/null || true
+
+  # Symlink executável
+  install -d "${pkgdir}/usr/bin"
+  ln -sf "/opt/compazio/compazio" "${pkgdir}/usr/bin/compazio"
+
+  # Desktop file
+  install -Dm644 "${srcdir}/compazio.desktop" "${pkgdir}/usr/share/applications/compazio.desktop"
+
+  # Ícone
+  if [ -f "${srcdir}/squashfs-root/compazio.png" ]; then
+    install -Dm644 "${srcdir}/squashfs-root/compazio.png" "${pkgdir}/usr/share/icons/hicolor/512x512/apps/compazio.png"
+  elif [ -f "${srcdir}/squashfs-root/usr/share/icons/hicolor/512x512/apps/compazio.png" ]; then
+    install -Dm644 "${srcdir}/squashfs-root/usr/share/icons/hicolor/512x512/apps/compazio.png" "${pkgdir}/usr/share/icons/hicolor/512x512/apps/compazio.png"
+  fi
+
+  # Licença
+  install -d "${pkgdir}/usr/share/licenses/${pkgname}"
+  if [ -f "${srcdir}/squashfs-root/LICENSE" ]; then
+    install -m644 "${srcdir}/squashfs-root/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  fi
+}
