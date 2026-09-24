@@ -131,7 +131,7 @@
     "category": "Development"
   },
   "pacman": {
-    "artifactName": "compazio-${version}-${arch}.${ext}",
+    "artifactName": "compazio-${version}-${arch}.pkg.tar.zst",
     "category": "Development"
   },
   "deb": {
