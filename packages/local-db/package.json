@@ -19,7 +19,7 @@
     "@forgedeck/schemas": "workspace:*",
     "@forgedeck/terminal": "workspace:*",
     "@forgedeck/workflow": "workspace:*",
-    "better-sqlite3": "12.11.1",
+    "better-sqlite3": "13.0.3",
     "drizzle-orm": "0.45.2"
   },
   "devDependencies": {
