@@ -10,7 +10,7 @@ de distribuição.
 | Formato         | Distribuições Alvo                                                                | Método de Instalação                  |
 | :-------------- | :-------------------------------------------------------------------------------- | :------------------------------------ |
 | **`.AppImage`** | Todas as distribuições Linux x86_64                                               | Execução direta (portável)            |
-| **`.rpm`**      | Fedora, Red Hat Enterprise Linux (RHEL), CentOS, openSUSE, Rocky Linux, AlmaLinux | `dnf` / `rpm` / `zypper`            |
+| **`.rpm`**      | Fedora, Red Hat Enterprise Linux (RHEL), CentOS, openSUSE, Rocky Linux, AlmaLinux | `dnf` / `rpm` / `zypper`              |
 | **Arch Linux**  | Arch Linux, Manjaro, EndeavourOS, Garuda                                          | pacote `.pkg.tar.zst` via `pacman -U` |
 | **`.deb`**      | Debian, Ubuntu, Linux Mint, Pop!_OS                                               | `apt` / `dpkg`                        |
 
