@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  package:
+  package-windows:
     name: Build and validate Windows x64
     runs-on: windows-latest
     timeout-minutes: 60
@@ -38,8 +38,36 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  package-linux:
+    name: Build and validate Linux x64 (AppImage, RPM, Pacman, DEB)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm fakeroot libfuse2 xvfb build-essential python3
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.20.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build and validate Linux release
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" pnpm release:linux:beta
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: community-linux
+          path: release/
+          if-no-files-found: error
+          retention-days: 7
+          include-hidden-files: true
+
   draft:
-    needs: package
+    needs: [package-windows, package-linux]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -49,8 +77,49 @@ jobs:
           persist-credentials: false
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          name: community-windows
-          path: artifacts
+          path: all-artifacts
+      - name: Compose and verify release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+          assets="artifacts/$version"
+          windows_dir="all-artifacts/community-windows/$version"
+          linux_dir="all-artifacts/community-linux/$version"
+
+          test -d "$windows_dir"
+          test -d "$linux_dir"
+          mkdir -p "$assets"
+
+          copy_required() {
+            local pattern="$1"
+            local label="$2"
+            mapfile -t matches < <(compgen -G "$pattern" || true)
+            if [[ ${#matches[@]} -ne 1 ]]; then
+              echo "::error::Expected exactly one $label artifact for pattern $pattern; found ${#matches[@]}"
+              exit 1
+            fi
+            cp "${matches[0]}" "$assets/"
+          }
+
+          copy_required "$windows_dir/Compazio-Setup-*.exe" "Windows installer"
+          copy_required "$windows_dir/Compazio-Setup-*.exe.blockmap" "Windows blockmap"
+          copy_required "$windows_dir/beta.yml" "Windows update metadata"
+          copy_required "$linux_dir/Compazio-*.AppImage" "Linux AppImage"
+          copy_required "$linux_dir/compazio_*.deb" "Linux DEB"
+          copy_required "$linux_dir/compazio-*.rpm" "Linux RPM"
+          copy_required "$linux_dir/compazio-*.pkg.tar.zst" "Linux Pacman package"
+          copy_required "$linux_dir/PKGBUILD" "Arch PKGBUILD"
+          copy_required "$linux_dir/.SRCINFO" "Arch SRCINFO"
+          copy_required "$linux_dir/compazio.desktop" "Arch desktop entry"
+
+          node scripts/release/multiplatform-manifest.mjs \
+            --directory "$assets" \
+            --version "$version" \
+            --channel beta \
+            --repository "${{ github.repository }}"
+
+          (cd "$assets" && sha256sum --check checksums.txt)
       - name: Create draft in this repository
         env:
           GH_TOKEN: ${{ github.token }}
@@ -63,9 +132,10 @@ jobs:
           [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$ ]]
           assets="artifacts/$version"
           test -f "$assets/checksums.txt"
-          (cd "$assets" && sha256sum --check checksums.txt)
+          test -f "$assets/release-manifest.json"
+          test -f "$assets/RELEASE_NOTES.md"
+
           # A release tag is immutable here: never replace assets of an existing release.
           gh release create "v$version" --draft --prerelease --target "$SOURCE_SHA" \
             --title "Compazio Community $version" --notes-file "$assets/RELEASE_NOTES.md" \
-            "$assets"/Compazio-Setup-*.exe "$assets"/Compazio-Setup-*.exe.blockmap \
-            "$assets/beta.yml" "$assets/release-manifest.json" "$assets/checksums.txt"
+            "$assets"/* "$assets"/.SRCINFO

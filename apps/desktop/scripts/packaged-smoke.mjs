@@ -7,40 +7,74 @@ import { fileURLToPath } from "node:url";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const desktopRoot = join(scriptDirectory, "..");
-if (process.platform !== "win32") throw new Error("The packaged smoke test requires Windows");
-const installer = await resolveInstaller();
-const temporaryRoot = await mkdtemp(join(tmpdir(), "compazio-nsis-smoke-"));
-const installationDirectory = join(temporaryRoot, "Compazio");
-const executable = join(installationDirectory, "Compazio.exe");
 
-try {
-  await run("NSIS install", installer, ["/S", `/D=${installationDirectory}`]);
-  if (!existsSync(executable))
-    throw new Error(`Installed Compazio executable was not found: ${executable}`);
-  await run(
-    "Installed Compazio smoke",
-    process.execPath,
-    [join(desktopRoot, "scripts", "package-smoke.mjs")],
-    {
-      COMPAZIO_V2_PACKAGED_EXECUTABLE: executable
-    }
-  );
-  const uninstaller = join(installationDirectory, "Uninstall Compazio Community.exe");
-  if (!existsSync(uninstaller)) throw new Error("NSIS uninstaller was not found.");
-  await run("NSIS uninstall", uninstaller, ["/S", `_?=${installationDirectory}`]);
-  if (existsSync(executable))
-    throw new Error("NSIS uninstall left the Compazio executable behind.");
-  process.stdout.write("Installed Compazio NSIS smoke passed.\n");
-} catch (error) {
-  process.stderr.write(
-    `Installed Compazio NSIS smoke failed: ${error instanceof Error ? error.message : String(error)}\n`
-  );
-  process.exitCode = 1;
-} finally {
-  await rm(temporaryRoot, { recursive: true, force: true });
+if (process.platform === "win32") {
+  await runWindowsPackagedSmoke();
+} else if (process.platform === "linux") {
+  await runLinuxPackagedSmoke();
+} else {
+  throw new Error(`Packaged smoke test is not supported on ${process.platform}`);
 }
 
-async function resolveInstaller() {
+async function runWindowsPackagedSmoke() {
+  const installer = await resolveWindowsInstaller();
+  const temporaryRoot = await mkdtemp(join(tmpdir(), "compazio-nsis-smoke-"));
+  const installationDirectory = join(temporaryRoot, "Compazio");
+  const executable = join(installationDirectory, "Compazio.exe");
+
+  try {
+    await run("NSIS install", installer, ["/S", `/D=${installationDirectory}`]);
+    if (!existsSync(executable))
+      throw new Error(`Installed Compazio executable was not found: ${executable}`);
+    await run(
+      "Installed Compazio smoke",
+      process.execPath,
+      [join(desktopRoot, "scripts", "package-smoke.mjs")],
+      {
+        COMPAZIO_V2_PACKAGED_EXECUTABLE: executable
+      }
+    );
+    const uninstaller = join(installationDirectory, "Uninstall Compazio Community.exe");
+    if (!existsSync(uninstaller)) throw new Error("NSIS uninstaller was not found.");
+    await run("NSIS uninstall", uninstaller, ["/S", `_?=${installationDirectory}`]);
+    if (existsSync(executable))
+      throw new Error("NSIS uninstall left the Compazio executable behind.");
+    process.stdout.write("Installed Compazio NSIS smoke passed.\n");
+  } catch (error) {
+    process.stderr.write(
+      `Installed Compazio NSIS smoke failed: ${error instanceof Error ? error.message : String(error)}\n`
+    );
+    process.exitCode = 1;
+  } finally {
+    await rm(temporaryRoot, { recursive: true, force: true });
+  }
+}
+
+async function runLinuxPackagedSmoke() {
+  const executable = join(desktopRoot, "release", "linux-unpacked", "compazio");
+  if (!existsSync(executable)) {
+    throw new Error(`Linux unpacked executable was not found: ${executable}`);
+  }
+
+  try {
+    await run(
+      "Packaged Linux Compazio smoke",
+      process.execPath,
+      [join(desktopRoot, "scripts", "package-smoke.mjs")],
+      {
+        COMPAZIO_V2_PACKAGED_EXECUTABLE: executable
+      }
+    );
+    process.stdout.write("Packaged Linux Compazio smoke passed.\n");
+  } catch (error) {
+    process.stderr.write(
+      `Packaged Linux Compazio smoke failed: ${error instanceof Error ? error.message : String(error)}\n`
+    );
+    process.exitCode = 1;
+  }
+}
+
+async function resolveWindowsInstaller() {
   if (process.env.COMPAZIO_V2_PACKAGED_INSTALLER !== undefined) {
     if (!existsSync(process.env.COMPAZIO_V2_PACKAGED_INSTALLER))
       throw new Error(

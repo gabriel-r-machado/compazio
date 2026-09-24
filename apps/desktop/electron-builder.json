@@ -91,6 +91,14 @@
         "arch": ["x64"]
       },
       {
+        "target": "rpm",
+        "arch": ["x64"]
+      },
+      {
+        "target": "pacman",
+        "arch": ["x64"]
+      },
+      {
         "target": "deb",
         "arch": ["x64"]
       }
@@ -104,6 +112,14 @@
   },
   "appImage": {
     "artifactName": "Compazio-${version}-${arch}.${ext}"
+  },
+  "rpm": {
+    "artifactName": "compazio-${version}.${arch}.${ext}",
+    "category": "Development"
+  },
+  "pacman": {
+    "artifactName": "compazio-${version}-${arch}.pkg.tar.zst",
+    "category": "Development"
   },
   "deb": {
     "artifactName": "compazio_${version}_${arch}.${ext}"

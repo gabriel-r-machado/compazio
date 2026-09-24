@@ -13,18 +13,36 @@ const files = (await readdir(directory, { withFileTypes: true }))
 const windows = await requiredAsset("Windows NSIS", files, (name) =>
   /^Compazio-Setup-.+\.exe$/i.test(name)
 );
-const macArm64 = await requiredAsset("macOS arm64 DMG", files, (name) =>
-  /^Compazio-.+-arm64\.dmg$/i.test(name)
+await requiredAsset("Windows blockmap", files, (name) =>
+  /^Compazio-Setup-.+\.exe\.blockmap$/i.test(name)
 );
-const macX64 = await requiredAsset("macOS x64 DMG", files, (name) =>
-  /^Compazio-.+-x64\.dmg$/i.test(name)
-);
+await requiredAsset("Windows update metadata", files, (name) => /^beta\.yml$/i.test(name));
+
 const appImage = await requiredAsset("Linux AppImage", files, (name) =>
   /^Compazio-.+-(?:x64|x86_64)\.AppImage$/i.test(name)
 );
-const deb = await requiredAsset("Linux deb", files, (name) =>
+const deb = await requiredAsset("Linux DEB", files, (name) =>
   /^compazio_.+_(?:amd64|x64)\.deb$/i.test(name)
 );
+const rpm = await requiredAsset("Linux RPM", files, (name) =>
+  /^compazio-.+\.(?:x86_64|x64)\.rpm$/i.test(name)
+);
+const pacman = await requiredAsset("Linux Pacman", files, (name) =>
+  /^compazio-.+-x64\.pkg\.tar\.zst$/i.test(name)
+);
+
+await requiredAsset("Arch PKGBUILD", files, (name) => name === "PKGBUILD");
+await requiredAsset("Arch SRCINFO", files, (name) => name === ".SRCINFO");
+await requiredAsset("Arch desktop entry", files, (name) => name === "compazio.desktop");
+
+const macArm64 = await optionalAsset("macOS arm64 DMG", files, (name) =>
+  /^Compazio-.+-arm64\.dmg$/i.test(name)
+);
+const macX64 = await optionalAsset("macOS x64 DMG", files, (name) =>
+  /^Compazio-.+-x64\.dmg$/i.test(name)
+);
+if ((macArm64 === null) !== (macX64 === null))
+  throw new Error("macOS release requires both arm64 and x64 DMG artifacts when enabled.");
 
 const artifacts = await Promise.all(files.map((filename) => artifact(filename)));
 const releaseTag = `v${options.version}`;
@@ -38,6 +56,28 @@ const releaseAsset = (item, platform, architecture, type) => ({
   sha256: item.sha256,
   byteSize: item.byteSize
 });
+
+const platforms = {
+  windows: {
+    x64: releaseAsset(windows, "windows", "x64", "exe")
+  },
+  linux: {
+    x64: {
+      appImage: releaseAsset(appImage, "linux", "x64", "appImage"),
+      deb: releaseAsset(deb, "linux", "x64", "deb"),
+      rpm: releaseAsset(rpm, "linux", "x64", "rpm"),
+      pacman: releaseAsset(pacman, "linux", "x64", "pacman")
+    }
+  }
+};
+
+if (macArm64 !== null && macX64 !== null) {
+  platforms.macos = {
+    arm64: releaseAsset(macArm64, "macos", "arm64", "dmg"),
+    x64: releaseAsset(macX64, "macos", "x64", "dmg")
+  };
+}
+
 const manifest = {
   schemaVersion: "1.0",
   version: options.version,
@@ -46,30 +86,33 @@ const manifest = {
     tag: releaseTag,
     url: `https://github.com/${options.repository}/releases/tag/${encodeURIComponent(releaseTag)}`
   },
-  platforms: {
-    windows: { x64: releaseAsset(windows, "windows", "x64", "exe") },
-    macos: {
-      arm64: releaseAsset(macArm64, "macos", "arm64", "dmg"),
-      x64: releaseAsset(macX64, "macos", "x64", "dmg")
-    },
-    linux: {
-      x64: {
-        appImage: releaseAsset(appImage, "linux", "x64", "appImage"),
-        deb: releaseAsset(deb, "linux", "x64", "deb")
-      }
+  platforms,
+  distributionMetadata: {
+    arch: {
+      pkgbuild: assetUrl("PKGBUILD"),
+      srcinfo: assetUrl(".SRCINFO"),
+      desktopEntry: assetUrl("compazio.desktop"),
+      aurPublished: false
     }
   },
-  artifacts,
+  artifacts: artifacts.map((item) => ({
+    ...item,
+    url: assetUrl(item.filename)
+  })),
   createdAt: new Date().toISOString()
 };
 
 await writeFile(joined("release-manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
 await writeFile(
-  joined("SHA256SUMS.txt"),
+  joined("checksums.txt"),
   `${artifacts.map((item) => `${item.sha256}  ${item.filename}`).join("\n")}\n`,
   "utf8"
 );
-await writeFile(joined("RELEASE_NOTES.md"), releaseNotes(options.version), "utf8");
+await writeFile(
+  joined("RELEASE_NOTES.md"),
+  releaseNotes(options.version, macArm64 !== null && macX64 !== null),
+  "utf8"
+);
 process.stdout.write(`Multiplatform release manifest written to ${directory}\n`);
 
 function joined(filename) {
@@ -83,6 +126,14 @@ async function requiredAsset(label, names, predicate) {
   return artifact(matches[0]);
 }
 
+async function optionalAsset(label, names, predicate) {
+  const matches = names.filter(predicate);
+  if (matches.length === 0) return null;
+  if (matches.length > 1)
+    throw new Error(`${label} expected at most one artifact; found ${matches.length}.`);
+  return artifact(matches[0]);
+}
+
 async function artifact(filename) {
   const content = await readFile(joined(filename));
   return {
@@ -93,7 +144,12 @@ async function artifact(filename) {
 }
 
 function isReleaseAsset(filename) {
-  return /\.(?:appimage|blockmap|deb|dmg|exe|yml)$/i.test(filename);
+  return (
+    /\.(?:appimage|blockmap|deb|dmg|exe|pkg\.tar\.zst|rpm|yml)$/i.test(filename) ||
+    filename === "PKGBUILD" ||
+    filename === ".SRCINFO" ||
+    filename === "compazio.desktop"
+  );
 }
 
 function parseArguments(args) {
@@ -127,25 +183,33 @@ function parseArguments(args) {
   return { directory, version, channel, repository };
 }
 
-function releaseNotes(version) {
+function releaseNotes(version, includesMac) {
+  const macDownload = includesMac ? "- macOS Apple Silicon e Intel: DMG.\n" : "";
+  const macNotice = includesMac
+    ? "No macOS, use o download manual desta release enquanto o caminho nativo de atualização não for validado.\n"
+    : "";
+
   return `# Compazio ${version}
 
-Beta de distribuição multiplataforma do Compazio, o workspace local-first para orquestração visual de agentes e terminais.
+Beta de distribuição do Compazio Community, o workspace local-first para orquestração visual de agentes e terminais.
 
 ## Downloads
 
 - Windows x64: instalador NSIS.
-- macOS Apple Silicon e Intel: DMG.
-- Linux x64: AppImage e pacote .deb.
+- Linux x64: AppImage, .deb, .rpm e pacote nativo Pacman (.pkg.tar.zst).
+${macDownload}
+## Arch Linux / AUR
+
+A release inclui \`PKGBUILD\`, \`.SRCINFO\` e \`compazio.desktop\` para facilitar uma futura publicação no AUR. O manifesto marca explicitamente \`aurPublished: false\`; não anuncie \`yay -S compazio-bin\` até o pacote estar publicado.
 
 ## Atualizações
 
-O canal beta com atualização dentro do aplicativo permanece habilitado somente no Windows. Em macOS e Linux, use o download manual desta release enquanto os caminhos nativos de atualização não forem validados.
-
+O canal beta com atualização dentro do aplicativo permanece habilitado somente no Windows. No Linux, use o download manual desta release.
+${macNotice}
 ## Assinatura
 
-Esta beta é distribuída sem certificado pago. O Windows pode mostrar um aviso do SmartScreen e o macOS pode solicitar uma confirmação do Gatekeeper. Não use certificados autoassinados como substituto de confiança pública.
-
+Esta beta pode ser distribuída sem certificado pago. O Windows pode mostrar um aviso do SmartScreen.
+${includesMac ? "O macOS pode solicitar uma confirmação do Gatekeeper.\n" : ""}
 ## Dados locais
 
 Atualizações e reinstalações preservam os dados do usuário no diretório gerenciado pelo Electron. A desinstalação remove o aplicativo, não os workspaces locais.

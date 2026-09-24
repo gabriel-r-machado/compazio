@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Compazio Community
+Exec=compazio %U
+Terminal=false
+Type=Application
+Icon=compazio
+StartupWMClass=Compazio
+Comment=Orquestração visual de agentes e terminais.
+GenericName=AI Agent Orchestration Workspace
+Categories=Development;IDE;
+MimeType=x-scheme-handler/compazio;
