@@ -10,7 +10,7 @@ O Compazio Community oferece suporte oficial a ambientes Linux x86_64 através d
 | :------------------- | :-------------------------------------------------------------------------------- | :--------------------------------------- |
 | **`.AppImage`**      | Todas as distribuições Linux x86_64                                               | Execução direta (portável)               |
 | **`.rpm`**           | Fedora, Red Hat Enterprise Linux (RHEL), CentOS, openSUSE, Rocky Linux, AlmaLinux | `dnf` / `rpm` / `zypper`                 |
-| **Arch Linux / AUR** | Arch Linux, Manjaro, EndeavourOS, Garuda                                          | AUR helper (`yay`/`paru`) ou `pacman -U` |
+| **Arch Linux**       | Arch Linux, Manjaro, EndeavourOS, Garuda                                          | pacote `.pkg.tar.zst` via `pacman -U`    |
 | **`.deb`**           | Debian, Ubuntu, Linux Mint, Pop!_OS                                               | `apt` / `dpkg`                           |
 
 ---
@@ -52,27 +52,15 @@ sudo zypper install ./compazio-*.x86_64.rpm
 
 ---
 
-### C. Arch Linux (Pacman & AUR)
+### C. Arch Linux
 
-#### Opção 1: Via AUR (Recomendado)
-
-O Compazio pode ser instalado via gerenciadores AUR como `yay` ou `paru`:
-
-```bash
-# Usando yay:
-yay -S compazio-bin
-
-# Usando paru:
-paru -S compazio-bin
-```
-
-#### Opção 2: Pacote Nativo `.pkg.tar.zst`
-
-Baixe o arquivo `compazio-<versão>-x86_64.pkg.tar.zst` e instale com o `pacman`:
+Baixe o pacote nativo `.pkg.tar.zst` da release e instale com o `pacman`:
 
 ```bash
 sudo pacman -U compazio-*-x86_64.pkg.tar.zst
 ```
+
+> Os arquivos `PKGBUILD` e `.SRCINFO` são gerados junto da release para facilitar uma futura publicação no AUR. Não use `yay -S compazio-bin` ou `paru -S compazio-bin` até o pacote estar efetivamente publicado no AUR.
 
 ---
 
