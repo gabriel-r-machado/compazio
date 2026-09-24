@@ -52,5 +52,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Show canonical Linux guide formatting
+        shell: bash
+        run: |
+          cp docs/install/linux.md /tmp/linux-guide.md
+          pnpm exec prettier --write docs/install/linux.md
+          git diff -- docs/install/linux.md
+          mv /tmp/linux-guide.md docs/install/linux.md
+
       - name: Build and validate Linux release
         run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" pnpm release:linux:beta
