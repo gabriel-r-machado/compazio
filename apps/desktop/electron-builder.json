@@ -48,7 +48,9 @@
     "target": [
       {
         "target": "nsis",
-        "arch": ["x64"]
+        "arch": [
+          "x64"
+        ]
       }
     ],
     "artifactName": "Compazio-Setup-${version}.${ext}",
@@ -71,7 +73,10 @@
     "target": [
       {
         "target": "dmg",
-        "arch": ["arm64", "x64"]
+        "arch": [
+          "arm64",
+          "x64"
+        ]
       }
     ],
     "artifactName": "Compazio-${version}-${arch}.${ext}",
@@ -88,19 +93,27 @@
     "target": [
       {
         "target": "AppImage",
-        "arch": ["x64"]
+        "arch": [
+          "x64"
+        ]
       },
       {
         "target": "rpm",
-        "arch": ["x64"]
+        "arch": [
+          "x64"
+        ]
       },
       {
         "target": "pacman",
-        "arch": ["x64"]
+        "arch": [
+          "x64"
+        ]
       },
       {
         "target": "deb",
-        "arch": ["x64"]
+        "arch": [
+          "x64"
+        ]
       }
     ],
     "artifactName": "Compazio-${version}-${arch}.${ext}",
@@ -115,32 +128,13 @@
   },
   "rpm": {
     "artifactName": "compazio-${version}.${arch}.${ext}",
-    "category": "Development",
-    "depends": [
-      "alsa-lib",
-      "gtk3",
-      "libnotify",
-      "nss",
-      "libsecret",
-      "libXScrnSaver",
-      "libXtst",
-      "xdg-utils"
-    ]
+    "category": "Development"
   },
   "pacman": {
     "artifactName": "compazio-${version}-${arch}.${ext}",
     "category": "Development"
   },
   "deb": {
-    "artifactName": "compazio_${version}_${arch}.${ext}",
-    "depends": [
-      "gconf2",
-      "gconf-service",
-      "libnotify4",
-      "libappindicator1",
-      "libxtst6",
-      "libnss3",
-      "libsecret-1-0"
-    ]
+    "artifactName": "compazio_${version}_${arch}.${ext}"
   }
 }
