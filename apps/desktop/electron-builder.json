@@ -48,9 +48,7 @@
     "target": [
       {
         "target": "nsis",
-        "arch": [
-          "x64"
-        ]
+        "arch": ["x64"]
       }
     ],
     "artifactName": "Compazio-Setup-${version}.${ext}",
@@ -73,10 +71,7 @@
     "target": [
       {
         "target": "dmg",
-        "arch": [
-          "arm64",
-          "x64"
-        ]
+        "arch": ["arm64", "x64"]
       }
     ],
     "artifactName": "Compazio-${version}-${arch}.${ext}",
@@ -93,27 +88,19 @@
     "target": [
       {
         "target": "AppImage",
-        "arch": [
-          "x64"
-        ]
+        "arch": ["x64"]
       },
       {
         "target": "rpm",
-        "arch": [
-          "x64"
-        ]
+        "arch": ["x64"]
       },
       {
         "target": "pacman",
-        "arch": [
-          "x64"
-        ]
+        "arch": ["x64"]
       },
       {
         "target": "deb",
-        "arch": [
-          "x64"
-        ]
+        "arch": ["x64"]
       }
     ],
     "artifactName": "Compazio-${version}-${arch}.${ext}",
