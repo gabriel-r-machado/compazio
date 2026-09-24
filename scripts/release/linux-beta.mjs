@@ -10,6 +10,7 @@ const rootPackage = JSON.parse(await readFile(join(repoRoot, "package.json"), "u
 const version = rootPackage.version;
 const desktopReleaseDirectory = join(repoRoot, "apps", "desktop", "release");
 const artifactDirectory = join(repoRoot, "release", version);
+const archPackagingDirectory = join(repoRoot, "packaging", "arch");
 
 if (process.platform !== "linux") throw new Error("Linux beta packaging requires Linux");
 await assertGitReady();
@@ -36,28 +37,58 @@ try {
   await runPnpm("restore host native modules", ["--filter", "@forgedeck/desktop", "native:node"]);
 }
 
+const packageFiles = await readdir(desktopReleaseDirectory);
+const appImage = requiredFile(
+  "Linux AppImage",
+  packageFiles,
+  (name) => /^Compazio-.+-(?:x64|x86_64)\.AppImage$/i.test(name)
+);
+const deb = requiredFile(
+  "Linux DEB",
+  packageFiles,
+  (name) => /^compazio_.+_(?:amd64|x64)\.deb$/i.test(name)
+);
+const rpm = requiredFile(
+  "Linux RPM",
+  packageFiles,
+  (name) => /^compazio-.+\.(?:x86_64|x64)\.rpm$/i.test(name)
+);
+const pacman = requiredFile(
+  "Linux Pacman",
+  packageFiles,
+  (name) => /^compazio-.+-x64\.pkg\.tar\.zst$/i.test(name)
+);
+
+await run("generate AUR assets", process.execPath, [
+  join(archPackagingDirectory, "generate-aur.mjs"),
+  join(desktopReleaseDirectory, appImage)
+]);
+
 await rm(artifactDirectory, { recursive: true, force: true });
 await mkdir(artifactDirectory, { recursive: true });
 
-const releaseFiles = (await readdir(desktopReleaseDirectory)).filter(
-  (file) =>
-    /\.(?:appimage|deb|rpm|pkg\.tar\.zst|blockmap|yml)$/i.test(file) ||
-    /^(release-manifest\.json|checksums\.txt|RELEASE_NOTES\.md)$/i.test(file)
-);
+const sources = [
+  [join(desktopReleaseDirectory, appImage), appImage],
+  [join(desktopReleaseDirectory, deb), deb],
+  [join(desktopReleaseDirectory, rpm), rpm],
+  [join(desktopReleaseDirectory, pacman), pacman],
+  [join(archPackagingDirectory, "PKGBUILD"), "PKGBUILD"],
+  [join(archPackagingDirectory, ".SRCINFO"), ".SRCINFO"],
+  [join(archPackagingDirectory, "compazio.desktop"), "compazio.desktop"]
+];
 
 const checksumLines = [];
 const artifactRecords = [];
 
-for (const file of releaseFiles) {
-  const sourcePath = join(desktopReleaseDirectory, file);
-  const targetPath = join(artifactDirectory, file);
+for (const [sourcePath, filename] of sources) {
+  const targetPath = join(artifactDirectory, filename);
   await copyFile(sourcePath, targetPath);
 
-  const fileStats = await stat(sourcePath);
-  const fileSha256 = await sha256(sourcePath);
-  checksumLines.push(`${fileSha256}  ${file}`);
+  const fileStats = await stat(targetPath);
+  const fileSha256 = await sha256(targetPath);
+  checksumLines.push(`${fileSha256}  ${filename}`);
   artifactRecords.push({
-    file,
+    file: filename,
     sha256: fileSha256,
     byteSize: fileStats.size
   });
@@ -75,8 +106,7 @@ const manifest = {
   publishedAt: new Date().toISOString(),
   minimumRequirements: {
     platform: "Linux",
-    architecture: "x64",
-    glibc: ">= 2.31"
+    architecture: "x64"
   }
 };
 
@@ -92,62 +122,50 @@ Beta público do núcleo de orquestração visual local do Compazio para Linux.
 
 ## Formatos disponíveis
 
-- **AppImage:** Executável portátil para todas as distribuições x86_64.
-- **RPM:** Pacote para Fedora, RHEL, CentOS, openSUSE, Rocky Linux e AlmaLinux.
-- **Pacman / Arch Linux:** Pacote nativo \`.pkg.tar.zst\` e suporte via AUR (\`compazio-bin\`).
-- **DEB:** Pacote para Debian, Ubuntu, Linux Mint e Pop!_OS.
+- **AppImage:** executável portátil para Linux x86_64.
+- **RPM:** pacote para distribuições baseadas em RPM.
+- **Pacman / Arch Linux:** pacote nativo \`.pkg.tar.zst\`.
+- **DEB:** pacote para distribuições baseadas em Debian.
+
+Os arquivos \`PKGBUILD\` e \`.SRCINFO\` acompanham os artefatos para facilitar uma futura publicação no AUR. Isso não significa que \`compazio-bin\` já esteja publicado no AUR.
 
 ## Instalação
 
 ### AppImage
+
 \`\`\`bash
 chmod +x Compazio-${version}-x64.AppImage
 ./Compazio-${version}-x64.AppImage
 \`\`\`
 
-### Fedora / RHEL / openSUSE (RPM)
+### RPM
+
 \`\`\`bash
 sudo dnf install ./compazio-${version}.x86_64.rpm
-# ou
-sudo zypper install ./compazio-${version}.x86_64.rpm
 \`\`\`
 
 ### Arch Linux
-\`\`\`bash
-# Pacote nativo:
-sudo pacman -U compazio-${version}-x86_64.pkg.tar.zst
 
-# Ou via AUR:
-yay -S compazio-bin
+\`\`\`bash
+sudo pacman -U compazio-${version}-x64.pkg.tar.zst
 \`\`\`
 
-### Debian / Ubuntu (DEB)
+### Debian / Ubuntu
+
 \`\`\`bash
 sudo apt install ./compazio_${version}_amd64.deb
 \`\`\`
-
-## Recursos incluídos
-
-- Canvas persistente com terminais PTY reais e isolamento de processos;
-- Integração de agentes (Claude Code, Codex, OpenCode);
-- Barramento de mensagens e coordenação entre agentes;
-- Visualização de notas Markdown e árvore de arquivos;
-- Diagnóstico sanitizado e restauração segura de workspace.
 `;
 
 await writeFile(join(artifactDirectory, "RELEASE_NOTES.md"), releaseNotes, "utf8");
-
-// Generate AUR package definitions
-try {
-  await run("generate AUR assets", process.execPath, [
-    join(repoRoot, "packaging", "arch", "generate-aur.mjs"),
-    join(artifactDirectory, `Compazio-${version}-x64.AppImage`)
-  ]);
-} catch (error) {
-  process.stderr.write(`Warning: could not generate Arch AUR assets: ${error.message}\n`);
-}
-
 process.stdout.write(`Linux beta artifacts ready in: ${artifactDirectory}\n`);
+
+function requiredFile(label, names, predicate) {
+  const matches = names.filter(predicate);
+  if (matches.length !== 1)
+    throw new Error(`${label} requires exactly one artifact; found ${matches.length}.`);
+  return matches[0];
+}
 
 async function assertGitReady() {
   const status = await capture("git", ["status", "--short", "--untracked-files=no"]);
