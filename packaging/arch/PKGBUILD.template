@@ -3,6 +3,7 @@
 
 pkgname=compazio-bin
 pkgver=__PKGVER__
+_upstream_version=__UPSTREAM_VERSION__
 pkgrel=1
 pkgdesc="Orquestração visual de agentes e terminais"
 arch=('x86_64')
@@ -27,7 +28,7 @@ conflicts=('compazio')
 options=('!strip')
 
 source=(
-  "Compazio-${pkgver}-x64.AppImage::https://github.com/gabriel-r-machado/compazio/releases/download/v${pkgver}/Compazio-${pkgver}-x64.AppImage"
+  "Compazio-${_upstream_version}-x64.AppImage::https://github.com/gabriel-r-machado/compazio/releases/download/v${_upstream_version}/Compazio-${_upstream_version}-x64.AppImage"
   "compazio.desktop"
 )
 sha256sums=(
@@ -36,8 +37,8 @@ sha256sums=(
 )
 
 prepare() {
-  chmod +x "Compazio-${pkgver}-x64.AppImage"
-  ./Compazio-${pkgver}-x64.AppImage --appimage-extract
+  chmod +x "Compazio-${_upstream_version}-x64.AppImage"
+  ./Compazio-${_upstream_version}-x64.AppImage --appimage-extract
 }
 
 package() {
