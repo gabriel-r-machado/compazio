@@ -1,17 +1,18 @@
 # Instalação e Execução no Linux
 
-O Compazio Community oferece suporte oficial a ambientes Linux x86_64 através de múltiplos formatos de distribuição.
+O Compazio Community oferece suporte oficial a ambientes Linux x86_64 através de múltiplos formatos
+de distribuição.
 
 ---
 
 ## 1. Formatos Disponíveis
 
-| Formato              | Distribuições Alvo                                                                | Método de Instalação                     |
-| :------------------- | :-------------------------------------------------------------------------------- | :--------------------------------------- |
-| **`.AppImage`**      | Todas as distribuições Linux x86_64                                               | Execução direta (portável)               |
-| **`.rpm`**           | Fedora, Red Hat Enterprise Linux (RHEL), CentOS, openSUSE, Rocky Linux, AlmaLinux | `dnf` / `rpm` / `zypper`                 |
-| **Arch Linux**       | Arch Linux, Manjaro, EndeavourOS, Garuda                                          | pacote `.pkg.tar.zst` via `pacman -U`    |
-| **`.deb`**           | Debian, Ubuntu, Linux Mint, Pop!_OS                                               | `apt` / `dpkg`                           |
+| Formato         | Distribuições Alvo                                                                | Método de Instalação                  |
+| :-------------- | :-------------------------------------------------------------------------------- | :------------------------------------ |
+| **`.AppImage`** | Todas as distribuições Linux x86_64                                               | Execução direta (portável)            |
+| **`.rpm`**      | Fedora, Red Hat Enterprise Linux (RHEL), CentOS, openSUSE, Rocky Linux, AlmaLinux | `dnf` / `rpm` / `zypper`            |
+| **Arch Linux**  | Arch Linux, Manjaro, EndeavourOS, Garuda                                          | pacote `.pkg.tar.zst` via `pacman -U` |
+| **`.deb`**      | Debian, Ubuntu, Linux Mint, Pop!_OS                                               | `apt` / `dpkg`                        |
 
 ---
 
@@ -29,7 +30,8 @@ chmod +x Compazio-*.AppImage
 ./Compazio-*.AppImage
 ```
 
-> **Nota para Ubuntu 24.04+:** Se o AppImage não iniciar por falta de FUSE, instale a biblioteca de compatibilidade:
+> **Nota para Ubuntu 24.04+:** Se o AppImage não iniciar por falta de FUSE, instale a biblioteca de
+> compatibilidade:
 >
 > ```bash
 > sudo apt install libfuse2t64  # ou libfuse2 no Ubuntu 22.04
@@ -60,7 +62,9 @@ Baixe o pacote nativo `.pkg.tar.zst` da release e instale com o `pacman`:
 sudo pacman -U compazio-*-x86_64.pkg.tar.zst
 ```
 
-> Os arquivos `PKGBUILD` e `.SRCINFO` são gerados junto da release para facilitar uma futura publicação no AUR. Não use `yay -S compazio-bin` ou `paru -S compazio-bin` até o pacote estar efetivamente publicado no AUR.
+> Os arquivos `PKGBUILD` e `.SRCINFO` são gerados junto da release para facilitar uma futura
+> publicação no AUR. Não use `yay -S compazio-bin` ou `paru -S compazio-bin` até o pacote estar
+> efetivamente publicado no AUR.
 
 ---
 
