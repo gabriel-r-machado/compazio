@@ -64,6 +64,7 @@ jobs:
           path: release/
           if-no-files-found: error
           retention-days: 7
+          include-hidden-files: true
 
   draft:
     needs: [package-windows, package-linux]
@@ -137,4 +138,4 @@ jobs:
           # A release tag is immutable here: never replace assets of an existing release.
           gh release create "v$version" --draft --prerelease --target "$SOURCE_SHA" \
             --title "Compazio Community $version" --notes-file "$assets/RELEASE_NOTES.md" \
-            "$assets"/*
+            "$assets"/* "$assets"/.SRCINFO
