@@ -25,6 +25,12 @@ const appImage = await requiredAsset("Linux AppImage", files, (name) =>
 const deb = await requiredAsset("Linux deb", files, (name) =>
   /^compazio_.+_(?:amd64|x64)\.deb$/i.test(name)
 );
+const rpm = await optionalAsset("Linux RPM", files, (name) =>
+  /^compazio-.+\.(?:x86_64|x64)\.rpm$/i.test(name)
+);
+const pacman = await optionalAsset("Linux Pacman", files, (name) =>
+  /^compazio-.+\.pkg\.tar\.zst$/i.test(name)
+);
 
 const artifacts = await Promise.all(files.map((filename) => artifact(filename)));
 const releaseTag = `v${options.version}`;
@@ -38,6 +44,13 @@ const releaseAsset = (item, platform, architecture, type) => ({
   sha256: item.sha256,
   byteSize: item.byteSize
 });
+const linuxArtifacts = {
+  appImage: releaseAsset(appImage, "linux", "x64", "appImage"),
+  deb: releaseAsset(deb, "linux", "x64", "deb")
+};
+if (rpm) linuxArtifacts.rpm = releaseAsset(rpm, "linux", "x64", "rpm");
+if (pacman) linuxArtifacts.pacman = releaseAsset(pacman, "linux", "x64", "pacman");
+
 const manifest = {
   schemaVersion: "1.0",
   version: options.version,
@@ -53,10 +66,7 @@ const manifest = {
       x64: releaseAsset(macX64, "macos", "x64", "dmg")
     },
     linux: {
-      x64: {
-        appImage: releaseAsset(appImage, "linux", "x64", "appImage"),
-        deb: releaseAsset(deb, "linux", "x64", "deb")
-      }
+      x64: linuxArtifacts
     }
   },
   artifacts,
@@ -83,6 +93,14 @@ async function requiredAsset(label, names, predicate) {
   return artifact(matches[0]);
 }
 
+async function optionalAsset(label, names, predicate) {
+  const matches = names.filter(predicate);
+  if (matches.length === 0) return null;
+  if (matches.length > 1)
+    throw new Error(`${label} expected at most one artifact; found ${matches.length}.`);
+  return artifact(matches[0]);
+}
+
 async function artifact(filename) {
   const content = await readFile(joined(filename));
   return {
@@ -93,7 +111,7 @@ async function artifact(filename) {
 }
 
 function isReleaseAsset(filename) {
-  return /\.(?:appimage|blockmap|deb|dmg|exe|yml)$/i.test(filename);
+  return /\.(?:appimage|blockmap|deb|dmg|exe|pkg\.tar\.zst|rpm|yml)$/i.test(filename);
 }
 
 function parseArguments(args) {
@@ -136,7 +154,7 @@ Beta de distribuição multiplataforma do Compazio, o workspace local-first para
 
 - Windows x64: instalador NSIS.
 - macOS Apple Silicon e Intel: DMG.
-- Linux x64: AppImage e pacote .deb.
+- Linux x64: AppImage, pacote .deb, pacote .rpm e pacote nativo Pacman (Arch Linux).
 
 ## Atualizações
 

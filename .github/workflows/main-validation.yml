@@ -87,3 +87,43 @@ jobs:
 
       - name: Community desktop smoke
         run: pnpm test:v2-electron-smoke
+
+  linux-desktop:
+    name: Linux desktop (AppImage, RPM, Pacman, DEB)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm fakeroot libfuse2 xvfb build-essential python3
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.20.0
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Rebuild Electron native modules
+        run: pnpm --filter @forgedeck/desktop native:electron
+
+      - name: Build monorepo
+        run: pnpm build
+
+      - name: Build community desktop
+        run: pnpm --filter @forgedeck/desktop build:v2
+
+      - name: Community desktop smoke under Xvfb
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" pnpm test:v2-electron-smoke
