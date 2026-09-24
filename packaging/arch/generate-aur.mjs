@@ -7,19 +7,23 @@ const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDirectory, "../..");
 const rootPackage = JSON.parse(await readFile(join(repoRoot, "package.json"), "utf8"));
 const version = rootPackage.version;
+const archVersion = version.replaceAll("-", "_");
 
 const desktopFile = join(scriptDirectory, "compazio.desktop");
 const desktopContent = await readFile(desktopFile);
 const desktopSha256 = createHash("sha256").update(desktopContent).digest("hex");
 
 // Optional path to the built AppImage to calculate hash, otherwise placeholder
-const appImagePath = process.argv[2] ?? join(repoRoot, "release", version, `Compazio-${version}-x64.AppImage`);
+const explicitAppImagePath = process.argv[2];
+const appImagePath =
+  explicitAppImagePath ?? join(repoRoot, "release", version, `Compazio-${version}-x64.AppImage`);
 let appImageSha256 = "SKIP";
 
 try {
   const appImageContent = await readFile(appImagePath);
   appImageSha256 = createHash("sha256").update(appImageContent).digest("hex");
-} catch {
+} catch (error) {
+  if (explicitAppImagePath !== undefined) throw error;
   process.stdout.write(`AppImage not found at ${appImagePath}; using placeholder checksum.\n`);
 }
 
@@ -27,7 +31,8 @@ const templatePath = join(scriptDirectory, "PKGBUILD.template");
 const template = await readFile(templatePath, "utf8");
 
 const pkgbuildContent = template
-  .replaceAll("__PKGVER__", version)
+  .replaceAll("__PKGVER__", archVersion)
+  .replaceAll("__UPSTREAM_VERSION__", version)
   .replaceAll("__APPIMAGE_SHA256__", appImageSha256)
   .replaceAll("__DESKTOP_SHA256__", desktopSha256);
 
@@ -36,7 +41,7 @@ await writeFile(targetPkgbuild, pkgbuildContent, "utf8");
 
 const srcinfoContent = `pkgbase = compazio-bin
 \tpkgdesc = Orquestração visual de agentes e terminais
-\tpkgver = ${version}
+\tpkgver = ${archVersion}
 \tpkgrel = 1
 \turl = https://www.compazio.app
 \tarch = x86_64
