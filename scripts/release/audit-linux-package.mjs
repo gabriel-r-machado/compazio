@@ -4,8 +4,10 @@ import { basename, extname, join, resolve } from "node:path";
 const args = new Map();
 for (let index = 2; index < process.argv.length; index += 2)
   args.set(process.argv[index], process.argv[index + 1]);
-const directory = resolve(args.get("--directory") ?? "");
-if (!directory) throw new Error("Usage: audit-linux-package.mjs --directory <linux-unpacked>");
+const directoryArgument = args.get("--directory");
+if (!directoryArgument)
+  throw new Error("Usage: audit-linux-package.mjs --directory <linux-unpacked>");
+const directory = resolve(directoryArgument);
 
 const files = await listFiles(directory);
 const forbiddenNames = files.filter((file) => {
