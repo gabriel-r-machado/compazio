@@ -94,7 +94,7 @@
   },
   "devDependencies": {
     "@electron/rebuild": "4.2.0",
-    "@swc/core": "1.15.43",
+    "@swc/core": "1.16.2",
     "@types/better-sqlite3": "7.6.13",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
